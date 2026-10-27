@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SOMMA | Contrata</title>
+  <meta name="description" content="SOMMA: contrata con nosotros.">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <a class="logo" href="#inicio">SOMMA</a>
+    <button class="nav-toggle" aria-label="Abrir menú" aria-expanded="false">☰</button>
+    <nav class="nav" id="nav">
+      <a href="#servicios">Servicios</a>
+      <a href="#nosotros">Nosotros</a>
+      <a href="#contacto" class="btn btn-small">Contacto</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero" id="inicio">
+      <h1>Contrata con SOMMA</h1>
+      <p>Texto de presentación: describe aquí en una frase qué ofrece SOMMA.</p>
+      <a href="#contacto" class="btn">Solicitar información</a>
+    </section>
+
+    <section class="section" id="servicios">
+      <h2>Servicios</h2>
+      <div class="cards">
+        <article class="card"><h3>Servicio 1</h3><p>Descripción breve del servicio.</p></article>
+        <article class="card"><h3>Servicio 2</h3><p>Descripción breve del servicio.</p></article>
+        <article class="card"><h3>Servicio 3</h3><p>Descripción breve del servicio.</p></article>
+      </div>
+    </section>
+
+    <section class="section alt" id="nosotros">
+      <h2>Nosotros</h2>
+      <p>Cuenta aquí quiénes son y por qué contratarlos.</p>
+    </section>
+
+    <section class="section" id="contacto">
+      <h2>Contacto</h2>
+      <form id="contact-form" novalidate>
+        <label>Nombre <input type="text" name="nombre" required></label>
+        <label>Correo <input type="email" name="correo" required></label>
+        <label>Mensaje <textarea name="mensaje" rows="4" required></textarea></label>
+        <button type="submit" class="btn">Enviar</button>
+        <p class="form-status" role="status" aria-live="polite"></p>
+      </form>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>&copy; <span id="year"></span> SOMMA. Todos los derechos reservados.</p>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
