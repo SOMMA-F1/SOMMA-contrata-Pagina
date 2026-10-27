@@ -161,6 +161,7 @@ main { max-width: 80rem; margin: 0 auto; padding: 1.75rem 1.25rem 3rem; }
 .pill { padding: 0.05rem 0.55rem; border-radius: 999px; font-size: 0.72rem; font-weight: 700; }
 .pill-red { background: var(--bad-bg); color: var(--bad-text); }
 .pill-green { background: var(--ok-bg); color: var(--ok-text); }
+.pill-muted { background: var(--f1-tag); color: var(--f1-stone); }
 
 .table-wrap { overflow-x: auto; border-radius: 8px; }
 table { width: 100%; border-collapse: collapse; font-size: 0.85rem; min-width: 36rem; }
@@ -177,6 +178,9 @@ tbody tr:hover { background: var(--f1-tag); }
 td.worker { font-weight: 700; }
 td.due { font-weight: 700; color: var(--bad-text); }
 td.due.warn { color: var(--warn-text); }
+.empty-row td { padding: 2.5rem 0.9rem; text-align: center; color: var(--f1-stone); border-bottom: 0; }
+.empty-row, .empty-row:hover { background: transparent !important; }
+.aviso-vacio { padding: 1.25rem; text-align: center; color: var(--f1-stone); font-size: 0.85rem; background: #fff; border: 1px dashed var(--f1-border); border-radius: 8px; }
 .empty { padding: 2rem 0.5rem; text-align: center; color: var(--f1-stone); }
 
 /* ---------- Indicadores ---------- */
@@ -192,6 +196,7 @@ td.due.warn { color: var(--warn-text); }
 .badge-red-soft, .badge.bajo { background: var(--bad-bg); color: var(--bad-text); }
 .badge.medio { background: var(--warn-bg); color: var(--warn-text); }
 .badge.alto, .badge-green { background: var(--ok-bg); color: var(--ok-text); }
+.badge.sin-datos { background: var(--f1-tag); color: var(--f1-stone); }
 
 .bar { height: 8px; border-radius: 999px; background: var(--f1-tag); overflow: hidden; margin-bottom: 0.5rem; }
 .bar span { display: block; height: 100%; border-radius: 999px; background: var(--bad); transition: width 0.4s; }

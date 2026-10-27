@@ -1,23 +1,8 @@
-// Datos de ejemplo: se reemplazarán por datos reales (Supabase u otra fuente).
-const trabajadores = { total: 31, acreditados: 12, noAcreditados: 19, sinAuditar: 0 };
-
-const vencimientos = [
-  { nombre: 'Trabajador de ejemplo 01', rut: '10000001', doc: 'SCTR de Salud y pensión', dias: 3 },
-  { nombre: 'Trabajador de ejemplo 02', rut: '10000002', doc: 'SCTR de Salud y pensión', dias: 4 },
-  { nombre: 'Trabajador de ejemplo 03', rut: '10000003', doc: 'SCTR de Salud y pensión', dias: 4 },
-  { nombre: 'Trabajador de ejemplo 04', rut: '10000004', doc: 'SCTR de Salud y pensión', dias: 4 },
-  { nombre: 'Trabajador de ejemplo 05', rut: '10000005', doc: 'Examen médico ocupacional', dias: 6 },
-  { nombre: 'Trabajador de ejemplo 06', rut: '10000006', doc: 'Curso de trabajo en altura', dias: 9 },
-  { nombre: 'Trabajador de ejemplo 07', rut: '10000007', doc: 'SCTR de Salud y pensión', dias: 12 },
-  { nombre: 'Trabajador de ejemplo 08', rut: '10000008', doc: 'Curso de primeros auxilios', dias: 14 },
-  { nombre: 'Trabajador de ejemplo 09', rut: '10000009', doc: 'Examen médico ocupacional', dias: 21 },
-  { nombre: 'Trabajador de ejemplo 10', rut: '10000010', doc: 'Curso de trabajo en altura', dias: 28 },
-];
-
-const avisos = [
-  { titulo: 'Actualización de requisitos de ingreso', texto: 'Se actualizó la lista de documentos exigidos para nuevos ingresos.', fecha: 'Ejemplo' },
-  { titulo: 'Recordatorio de vencimientos', texto: 'Revisa los documentos que vencen en los próximos 30 días.', fecha: 'Ejemplo' },
-];
+// Aún no hay fuente de datos conectada: todo arranca vacío.
+// Cuando exista (Supabase u otra), solo hay que llenar estas tres variables.
+const trabajadores = { total: 0, acreditados: 0, noAcreditados: 0, sinAuditar: 0 };
+const vencimientos = []; // { nombre, rut, doc, dias }
+const avisos = [];       // { titulo, texto, fecha }
 
 const $ = (id) => document.getElementById(id);
 
@@ -30,6 +15,17 @@ function nivel(pct) {
 function pintarTabla() {
   const body = $('docs-body');
   body.replaceChildren();
+
+  if (vencimientos.length === 0) {
+    const tr = document.createElement('tr');
+    tr.className = 'empty-row';
+    const td = document.createElement('td');
+    td.colSpan = 4;
+    td.textContent = 'Sin datos para mostrar.';
+    tr.appendChild(td);
+    body.appendChild(tr);
+  }
+
   vencimientos.forEach((v) => {
     const tr = document.createElement('tr');
     const celdas = [
@@ -46,19 +42,34 @@ function pintarTabla() {
     });
     body.appendChild(tr);
   });
+
   $('count-docs').textContent = vencimientos.length;
+  $('count-docs').classList.toggle('pill-red', vencimientos.length > 0);
+  $('count-docs').classList.toggle('pill-muted', vencimientos.length === 0);
 }
 
 function pintarCumplimiento() {
+  const badge = $('nivel-badge');
+  const bar = $('nivel-bar');
+
+  if (trabajadores.total === 0) {
+    $('nivel-valor').textContent = '—';
+    badge.textContent = 'Sin datos';
+    badge.className = 'badge sin-datos';
+    bar.className = 'bar';
+    bar.removeAttribute('aria-valuenow');
+    $('nivel-fill').style.width = '0';
+    $('nivel-detalle').textContent = 'Sin trabajadores registrados.';
+    return;
+  }
+
   const pct = Math.round((trabajadores.acreditados / trabajadores.total) * 1000) / 10;
   const n = nivel(pct);
 
   $('nivel-valor').textContent = pct.toLocaleString('es-PE', { minimumFractionDigits: 1 }) + '%';
-  const badge = $('nivel-badge');
   badge.textContent = n.texto;
   badge.className = 'badge ' + n.clase;
 
-  const bar = $('nivel-bar');
   bar.className = 'bar ' + n.clase;
   bar.setAttribute('aria-valuenow', String(Math.round(pct)));
   $('nivel-fill').style.width = pct + '%';
@@ -76,16 +87,21 @@ function pintarDonut() {
     { n: trabajadores.sinAuditar, color: '#625e5b', texto: 'Sin auditar' },
   ];
 
-  let acumulado = 0;
-  const tramos = partes
-    .filter((p) => p.n > 0)
-    .map((p) => {
-      const ini = (acumulado / trabajadores.total) * 360;
-      acumulado += p.n;
-      const fin = (acumulado / trabajadores.total) * 360;
-      return `${p.color} ${ini}deg ${fin}deg`;
-    });
-  $('donut').style.background = `conic-gradient(${tramos.join(', ')})`;
+  const donut = $('donut');
+  if (trabajadores.total === 0) {
+    donut.style.background = '#ede8e2';
+  } else {
+    let acumulado = 0;
+    const tramos = partes
+      .filter((p) => p.n > 0)
+      .map((p) => {
+        const ini = (acumulado / trabajadores.total) * 360;
+        acumulado += p.n;
+        const fin = (acumulado / trabajadores.total) * 360;
+        return `${p.color} ${ini}deg ${fin}deg`;
+      });
+    donut.style.background = `conic-gradient(${tramos.join(', ')})`;
+  }
 
   const legend = $('legend');
   legend.replaceChildren();
@@ -107,12 +123,31 @@ function pintarVencimientos() {
   alerta.classList.toggle('hidden', criticos === 0);
   alerta.textContent = `⚠ ${criticos} vencen en menos de 15 días`;
 
-  $('docs-badge').hidden = criticos === 0;
+  const badge = $('docs-badge');
+  if (total === 0) {
+    badge.textContent = 'Sin datos';
+    badge.className = 'badge sin-datos';
+  } else if (criticos > 0) {
+    badge.textContent = 'Crítico';
+    badge.className = 'badge badge-red-soft';
+  } else {
+    badge.textContent = 'Normal';
+    badge.className = 'badge badge-green';
+  }
 }
 
 function pintarAvisos() {
   const lista = $('aviso-list');
   lista.replaceChildren();
+
+  if (avisos.length === 0) {
+    const li = document.createElement('li');
+    li.className = 'aviso-vacio';
+    li.textContent = 'No hay avisos por el momento.';
+    lista.appendChild(li);
+    return;
+  }
+
   avisos.forEach((a) => {
     const li = document.createElement('li');
     li.className = 'aviso';
