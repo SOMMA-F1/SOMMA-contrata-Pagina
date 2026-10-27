@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <rect width="200" height="200" rx="18" fill="#ff5b12"/>
+  <text x="16" y="146" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="118" letter-spacing="-8" fill="#ffffff">F1</text>
+  <text x="132" y="78" font-family="Arial, Helvetica, sans-serif" font-weight="900" font-size="64" fill="#8a857f">+</text>
+  <circle cx="152" cy="152" r="42" fill="#252321" stroke="#ffffff" stroke-width="5"/>
+  <g transform="translate(132,132) scale(1.6667)" fill="#ffffff">
+    <path d="M21.75 6.75a4.5 4.5 0 01-4.884 4.484c-1.076-.091-2.264.071-2.95.904l-7.152 8.723a2.25 2.25 0 01-3.585-2.715l8.18-8.185c.832-.833.992-2.021.9-3.098a4.5 4.5 0 016.336-4.486l-3.276 3.276a3.004 3.004 0 002.25 2.25l3.276-3.276c.256.565.396 1.192.396 1.852z"/>
+  </g>
+</svg>

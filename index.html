@@ -3,56 +3,135 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>SOMMA | Contrata</title>
-  <meta name="description" content="SOMMA: contrata con nosotros.">
+  <title>SOMMA | Dashboard de Acreditación</title>
+  <meta name="description" content="Dashboard de acreditación de F1 Services & Solutions.">
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-  <header class="site-header">
-    <a class="logo" href="#inicio">SOMMA</a>
-    <button class="nav-toggle" aria-label="Abrir menú" aria-expanded="false">☰</button>
-    <nav class="nav" id="nav">
-      <a href="#servicios">Servicios</a>
-      <a href="#nosotros">Nosotros</a>
-      <a href="#contacto" class="btn btn-small">Contacto</a>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="#inicio">
+        <img src="assets/logo.svg" alt="F1+" width="40" height="40">
+        <span class="brand-text">
+          <strong>SOMMA</strong>
+          <small>Acreditación de contratistas</small>
+        </span>
+      </a>
+      <button class="menu-toggle" aria-label="Abrir menú" aria-expanded="false" aria-controls="menu">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+      <nav class="toplinks" aria-label="Enlaces generales">
+        <a href="#inicio">Inicio</a>
+        <a href="#avisos">Avisos</a>
+        <a href="#contacto">Contáctenos</a>
+      </nav>
+    </div>
+    <nav class="tabsbar" id="menu" aria-label="Menú principal">
+      <a href="#inicio" class="tab active" aria-current="page">Inicio</a>
+      <a href="#" class="tab">Generar listado</a>
+      <a href="#" class="tab">Ingreso de datos</a>
+      <a href="#" class="tab">Auditorías</a>
+      <a href="#" class="tab">Herramientas</a>
     </nav>
   </header>
 
-  <main>
-    <section class="hero" id="inicio">
-      <h1>Contrata con SOMMA</h1>
-      <p>Texto de presentación: describe aquí en una frase qué ofrece SOMMA.</p>
-      <a href="#contacto" class="btn">Solicitar información</a>
-    </section>
-
-    <section class="section" id="servicios">
-      <h2>Servicios</h2>
-      <div class="cards">
-        <article class="card"><h3>Servicio 1</h3><p>Descripción breve del servicio.</p></article>
-        <article class="card"><h3>Servicio 2</h3><p>Descripción breve del servicio.</p></article>
-        <article class="card"><h3>Servicio 3</h3><p>Descripción breve del servicio.</p></article>
+  <main id="inicio">
+    <div class="page-head">
+      <div>
+        <h1>F1 SERVICES &amp; SOLUTIONS <span class="demo-tag">Datos de ejemplo</span></h1>
+        <p>Dashboard de Acreditación</p>
       </div>
-    </section>
+      <div class="page-actions">
+        <button type="button" class="btn-ghost" id="btn-ayuda">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7M12 17h.01"/></svg>
+          Ayuda
+        </button>
+        <button type="button" class="btn-dark" id="btn-reportes">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11m0 0-4-4m4 4 4-4M5 20h14"/></svg>
+          Ver reportes de acreditación
+        </button>
+      </div>
+    </div>
 
-    <section class="section alt" id="nosotros">
-      <h2>Nosotros</h2>
-      <p>Cuenta aquí quiénes son y por qué contratarlos.</p>
-    </section>
+    <div class="grid">
+      <section class="card main-card" aria-labelledby="tab-docs">
+        <div class="tabs" role="tablist">
+          <button role="tab" id="tab-docs" class="tabbtn active" aria-selected="true" aria-controls="panel-docs">
+            Documentos, cursos y exámenes <span class="pill pill-red" id="count-docs">0</span>
+          </button>
+          <button role="tab" id="tab-prov" class="tabbtn" aria-selected="false" aria-controls="panel-prov">
+            Acreditaciones provisorias <span class="pill pill-green" id="count-prov">✓</span>
+          </button>
+        </div>
 
-    <section class="section" id="contacto">
-      <h2>Contacto</h2>
-      <form id="contact-form" novalidate>
-        <label>Nombre <input type="text" name="nombre" required></label>
-        <label>Correo <input type="email" name="correo" required></label>
-        <label>Mensaje <textarea name="mensaje" rows="4" required></textarea></label>
-        <button type="submit" class="btn">Enviar</button>
-        <p class="form-status" role="status" aria-live="polite"></p>
-      </form>
+        <div id="panel-docs" role="tabpanel" aria-labelledby="tab-docs">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Trabajador</th><th>RUT</th><th>Documento / curso / examen</th><th>Vencimiento</th></tr>
+              </thead>
+              <tbody id="docs-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="panel-prov" role="tabpanel" aria-labelledby="tab-prov" hidden>
+          <p class="empty">No hay acreditaciones provisorias pendientes.</p>
+        </div>
+      </section>
+
+      <aside class="side" aria-label="Indicadores">
+        <article class="card kpi">
+          <header><h2>Nivel de cumplimiento</h2><span class="badge" id="nivel-badge"></span></header>
+          <div class="kpi-big">
+            <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>
+            <strong id="nivel-valor">0%</strong>
+          </div>
+          <div class="bar" role="progressbar" aria-label="Nivel de cumplimiento" aria-valuemin="0" aria-valuemax="100" id="nivel-bar"><span id="nivel-fill"></span></div>
+          <p class="muted small" id="nivel-detalle"></p>
+        </article>
+
+        <article class="card kpi">
+          <h2>Total de trabajadores</h2>
+          <p class="kpi-num" id="total-trab">0</p>
+          <div class="donut-row">
+            <ul class="legend" id="legend"></ul>
+            <div class="donut" id="donut" role="img" aria-label="Distribución de trabajadores"></div>
+          </div>
+        </article>
+
+        <article class="card kpi">
+          <header><h2>Documentos, cursos y exámenes</h2><span class="badge badge-red-soft" id="docs-badge">Crítico</span></header>
+          <div class="kpi-big">
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></svg>
+            <strong id="docs-total">0</strong>
+            <span class="muted">vencen en los próximos 30 días</span>
+          </div>
+          <p class="alert" id="docs-alert"></p>
+        </article>
+
+        <article class="card kpi">
+          <header><h2>Acreditaciones provisorias</h2><span class="badge badge-green">Normal</span></header>
+          <p class="muted small">Sin acreditaciones provisorias por vencer.</p>
+        </article>
+      </aside>
+    </div>
+
+    <section class="avisos" id="avisos" aria-labelledby="avisos-title">
+      <div class="avisos-head">
+        <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8M10 20a2 2 0 0 0 4 0"/></svg>
+        <div>
+          <h2 id="avisos-title">Centro de Avisos</h2>
+          <p class="muted small">Actualizaciones de la empresa</p>
+        </div>
+      </div>
+      <ul class="aviso-list" id="aviso-list"></ul>
     </section>
   </main>
 
-  <footer class="site-footer">
-    <p>&copy; <span id="year"></span> SOMMA. Todos los derechos reservados.</p>
+  <footer class="footer" id="contacto">
+    <p>&copy; <span id="year"></span> F1 Services &amp; Solutions · SOMMA</p>
   </footer>
 
   <script src="js/main.js"></script>
