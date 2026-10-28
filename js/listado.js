@@ -39,7 +39,106 @@ function celda(tr, texto, clase) {
   return td;
 }
 
+// ---------- Menú de acciones por trabajador ----------
+// Las páginas de destino aún no existen: por ahora cada acción muestra un aviso.
+const ACCIONES = [
+  {
+    id: 'editar',
+    texto: 'Editar',
+    icono: '<path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-3-3L5 17v3Z"/><path d="M13.5 8.5l2 2"/>',
+  },
+  {
+    id: 'documentos',
+    texto: 'Ver documentos',
+    icono: '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z"/><path d="M14 3v5h5M9 13h6M9 17h6"/>',
+  },
+  {
+    id: 'acreditacion',
+    texto: 'Estado de acreditación',
+    icono: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 10h4M7 14h6M15 10h2"/>',
+  },
+];
+
+const menu = document.createElement('div');
+menu.className = 'menu-acciones';
+menu.setAttribute('role', 'menu');
+menu.hidden = true;
+document.body.appendChild(menu);
+
+let menuBoton = null;
+let menuTrabajador = null;
+let avisoTimer = null;
+
+function mostrarAviso(texto) {
+  const aviso = $('toast');
+  aviso.textContent = texto;
+  aviso.classList.add('visible');
+  clearTimeout(avisoTimer);
+  avisoTimer = setTimeout(() => aviso.classList.remove('visible'), 3500);
+}
+
+function cerrarMenu(devolverFoco = false) {
+  if (menu.hidden) return;
+  menu.hidden = true;
+  if (menuBoton) {
+    menuBoton.setAttribute('aria-expanded', 'false');
+    if (devolverFoco) menuBoton.focus();
+  }
+  menuBoton = null;
+  menuTrabajador = null;
+}
+
+function posicionarMenu() {
+  if (!menuBoton) return;
+  const r = menuBoton.getBoundingClientRect();
+  const ancho = menu.offsetWidth;
+  const left = Math.max(8, Math.min(r.left + window.scrollX, window.scrollX + document.documentElement.clientWidth - ancho - 8));
+  menu.style.left = left + 'px';
+  menu.style.top = r.bottom + window.scrollY + 4 + 'px';
+}
+
+function abrirMenu(boton, trabajador) {
+  if (!menu.hidden && menuBoton === boton) { cerrarMenu(); return; }
+  cerrarMenu();
+
+  menu.replaceChildren();
+  ACCIONES.forEach((a) => {
+    const item = document.createElement('button');
+    item.type = 'button';
+    item.className = 'menu-item';
+    item.setAttribute('role', 'menuitem');
+    item.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${a.icono}</svg>`;
+    item.append(a.texto);
+    item.addEventListener('click', () => {
+      const nombre = menuTrabajador ? menuTrabajador.nombre : '';
+      cerrarMenu(true);
+      mostrarAviso(`${a.texto}: ${nombre}. Esta opción estará disponible próximamente.`);
+    });
+    menu.appendChild(item);
+  });
+
+  menuBoton = boton;
+  menuTrabajador = trabajador;
+  boton.setAttribute('aria-expanded', 'true');
+  menu.hidden = false;
+  posicionarMenu();
+  menu.querySelector('.menu-item').focus();
+}
+
+document.addEventListener('click', (e) => { if (!menu.contains(e.target)) cerrarMenu(); });
+window.addEventListener('resize', posicionarMenu);
+$('lista-body').closest('.table-wrap').addEventListener('scroll', () => cerrarMenu());
+menu.addEventListener('keydown', (e) => {
+  const items = [...menu.querySelectorAll('.menu-item')];
+  const i = items.indexOf(document.activeElement);
+  if (e.key === 'Escape') { e.preventDefault(); cerrarMenu(true); }
+  else if (e.key === 'ArrowDown') { e.preventDefault(); items[(i + 1) % items.length].focus(); }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); items[(i - 1 + items.length) % items.length].focus(); }
+  else if (e.key === 'Tab') cerrarMenu();
+});
+
 function pintar() {
+  cerrarMenu();
   const filtrados = ordenar(filtrar());
   const tamano = Number($('page-size').value);
   const paginas = Math.max(1, Math.ceil(filtrados.length / tamano));
@@ -75,7 +174,27 @@ function pintar() {
     tr.appendChild(tdCheck);
 
     celda(tr, t.id);
-    celda(tr, t.nombre, 'worker');
+
+    const tdNombre = document.createElement('td');
+    tdNombre.className = 'worker';
+    const btnNombre = document.createElement('button');
+    btnNombre.type = 'button';
+    btnNombre.className = 'nombre-btn';
+    btnNombre.setAttribute('aria-haspopup', 'menu');
+    btnNombre.setAttribute('aria-expanded', 'false');
+    btnNombre.append(t.nombre, ' ');
+    const caret = document.createElement('span');
+    caret.className = 'caret';
+    caret.setAttribute('aria-hidden', 'true');
+    caret.textContent = '▾';
+    btnNombre.appendChild(caret);
+    btnNombre.addEventListener('click', (e) => {
+      e.stopPropagation();
+      abrirMenu(btnNombre, t);
+    });
+    tdNombre.appendChild(btnNombre);
+    tr.appendChild(tdNombre);
+
     celda(tr, t.rut);
     celda(tr, t.cargo);
     const urgente = t.dias !== null && t.dias <= 15;
