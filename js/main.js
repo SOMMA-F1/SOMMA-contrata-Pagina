@@ -178,18 +178,8 @@ tabs.forEach((t) => {
   });
 });
 
-// Menú móvil
-const toggle = document.querySelector('.menu-toggle');
-const menu = $('menu');
-toggle.addEventListener('click', () => {
-  const abierto = menu.classList.toggle('open');
-  toggle.setAttribute('aria-expanded', String(abierto));
-});
-
 $('btn-ayuda').addEventListener('click', () => alert('Ayuda: próximamente.'));
 $('btn-reportes').addEventListener('click', () => alert('Reportes de acreditación: próximamente.'));
-
-$('year').textContent = new Date().getFullYear();
 
 pintarTabla();
 pintarCumplimiento();

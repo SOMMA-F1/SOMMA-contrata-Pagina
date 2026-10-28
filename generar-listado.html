@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SOMMA | Generar listado</title>
+  <meta name="description" content="Listado de trabajadores de F1 Services & Solutions.">
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="index.html">
+        <img src="assets/logo.svg" alt="F1+" width="40" height="40">
+        <span class="brand-text">
+          <strong>SOMMA</strong>
+          <small>Acreditación de contratistas</small>
+        </span>
+      </a>
+      <button class="menu-toggle" aria-label="Abrir menú" aria-expanded="false" aria-controls="menu">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+      <nav class="toplinks" aria-label="Enlaces generales">
+        <a href="index.html">Inicio</a>
+        <a href="index.html#avisos">Avisos</a>
+        <a href="index.html#contacto">Contáctenos</a>
+      </nav>
+    </div>
+    <nav class="tabsbar" id="menu" aria-label="Menú principal">
+      <a href="index.html" class="tab">Inicio</a>
+      <a href="generar-listado.html" class="tab active" aria-current="page">Generar listado</a>
+      <a href="#" class="tab">Ingreso de datos</a>
+      <a href="#" class="tab">Auditorías</a>
+      <a href="#" class="tab">Herramientas</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="page-head">
+      <div class="title-row">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg>
+        <h1>Listado de trabajadores</h1>
+      </div>
+
+      <div class="filtros">
+        <button type="button" class="btn-filtros" id="btn-filtros" aria-expanded="false" aria-controls="panel-filtros">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h18l-7 8v6l-4-2v-4L3 5Z"/></svg>
+          Filtros avanzados
+          <span class="filtros-count" id="filtros-count" hidden>0</span>
+          <span aria-hidden="true">▾</span>
+        </button>
+        <form class="panel-filtros" id="panel-filtros" hidden>
+          <label>Estado
+            <select id="f-estado">
+              <option value="">Todos</option>
+              <option value="Acreditado">Acreditado</option>
+              <option value="No acreditado">No acreditado</option>
+            </select>
+          </label>
+          <label>Cargo
+            <input type="text" id="f-cargo" placeholder="Ej. Supervisor">
+          </label>
+          <label>Vencimiento
+            <select id="f-venc">
+              <option value="">Todos</option>
+              <option value="30">Vence en 30 días o menos</option>
+              <option value="none">Sin vencimiento</option>
+            </select>
+          </label>
+          <div class="filtros-acciones">
+            <button type="reset" class="btn-ghost" id="f-limpiar">Limpiar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <section class="card listado" aria-label="Tabla de trabajadores">
+      <div class="listado-tools">
+        <label class="mostrar">Mostrar
+          <select id="page-size">
+            <option>10</option>
+            <option selected>25</option>
+            <option>50</option>
+            <option>100</option>
+          </select>
+          registros
+        </label>
+        <label class="buscar">Buscar:
+          <input type="search" id="buscar" autocomplete="off">
+        </label>
+      </div>
+
+      <div class="table-wrap">
+        <table class="tabla-listado">
+          <thead>
+            <tr>
+              <th class="col-check"><input type="checkbox" id="check-all" aria-label="Seleccionar todos"></th>
+              <th><button type="button" class="sort" data-key="id">ID <span class="arrow"></span></button></th>
+              <th><button type="button" class="sort" data-key="nombre">Nombre <span class="arrow"></span></button></th>
+              <th><button type="button" class="sort" data-key="rut">RUT <span class="arrow"></span></button></th>
+              <th><button type="button" class="sort" data-key="cargo">Cargo <span class="arrow"></span></button></th>
+              <th><button type="button" class="sort" data-key="venc">Vencimiento <span class="arrow"></span></button></th>
+              <th><button type="button" class="sort" data-key="estado">Estado <span class="arrow"></span></button></th>
+            </tr>
+          </thead>
+          <tbody id="lista-body"></tbody>
+        </table>
+      </div>
+
+      <div class="listado-pie">
+        <p class="muted small" id="info">Mostrando 0 a 0 de 0 registros</p>
+        <div class="paginas">
+          <button type="button" class="pag" id="prev">Anterior</button>
+          <span class="muted small" id="pag-estado">Página 1 de 1</span>
+          <button type="button" class="pag" id="next">Siguiente</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>&copy; <span id="year"></span> F1 Services &amp; Solutions · SOMMA</p>
+  </footer>
+
+  <script src="js/common.js"></script>
+  <script src="js/listado.js"></script>
+</body>
+</html>
