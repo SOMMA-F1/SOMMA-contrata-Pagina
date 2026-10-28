@@ -293,6 +293,46 @@ td.due.warn { color: var(--warn-text); }
 .pag:hover:not(:disabled) { border-color: var(--f1-orange); color: var(--f1-orange-dark); }
 .pag:disabled { opacity: 0.45; cursor: default; }
 
+/* ---------- Formulario de ingreso ---------- */
+.form-card { padding: 1.5rem 1.5rem 1.25rem; }
+.form-section { padding-bottom: 1.25rem; margin-bottom: 1.25rem; border-bottom: 1px solid var(--f1-border); }
+.form-section h2 { margin-bottom: 0.9rem; font-size: 1rem; color: var(--f1-ink); }
+
+.form-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem 1.25rem; }
+.field { display: grid; align-content: start; gap: 0.3rem; }
+.field.span-2 { grid-column: span 2; }
+.field label { font-size: 0.75rem; font-weight: 700; color: var(--f1-stone); }
+.req { color: var(--bad); }
+.field input, .field select {
+  width: 100%;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--f1-border);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--f1-ink);
+  font: inherit;
+  font-size: 0.88rem;
+}
+.field input:focus, .field select:focus { outline: 2px solid var(--f1-orange); outline-offset: 0; border-color: transparent; }
+.field.invalid input, .field.invalid select { border-color: var(--bad); }
+.field-error { min-height: 0; margin: 0; font-size: 0.72rem; color: var(--bad-text); }
+.field-error:empty { display: none; }
+
+.form-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 0.75rem; }
+.form-actions .form-status { margin-right: auto; font-size: 0.82rem; }
+.btn-primary {
+  padding: 0.65rem 1.3rem;
+  border: 0;
+  border-radius: 8px;
+  background: var(--f1-orange);
+  color: #fff;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+.btn-primary:hover { background: var(--f1-orange-dark); }
+.form-status.ok { color: var(--ok-text); }
+.form-status.error { color: var(--bad-text); }
+
 /* ---------- Avisos ---------- */
 .avisos { margin-top: 2rem; }
 .avisos-head { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.9rem; color: var(--f1-stone); }
@@ -313,6 +353,7 @@ td.due.warn { color: var(--warn-text); }
 
 /* ---------- Responsive ---------- */
 @media (max-width: 960px) {
+  .form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .grid { grid-template-columns: minmax(0, 1fr); }
   .side { grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); }
 }
@@ -324,6 +365,10 @@ td.due.warn { color: var(--warn-text); }
   .tabsbar.open { display: flex; }
   .tab { margin-top: 0.25rem; border-radius: 8px; }
   .page-head h1 { font-size: 1.15rem; }
+  .form-grid { grid-template-columns: minmax(0, 1fr); }
+  .field.span-2 { grid-column: auto; }
+  .form-card { padding: 1.1rem; }
+  .form-actions .btn-primary { width: 100%; }
   .panel-filtros { right: auto; left: 0; width: min(17rem, calc(100vw - 2.5rem)); }
   .btn-dark { width: 100%; justify-content: center; }
 }

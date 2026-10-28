@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SOMMA | Ingreso de trabajadores</title>
+  <meta name="description" content="Ingreso de trabajadores de F1 Services & Solutions.">
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="index.html">
+        <img src="assets/logo.svg" alt="F1+" width="40" height="40">
+        <span class="brand-text">
+          <strong>SOMMA</strong>
+          <small>Acreditación de contratistas</small>
+        </span>
+      </a>
+      <button class="menu-toggle" aria-label="Abrir menú" aria-expanded="false" aria-controls="menu">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+      <nav class="toplinks" aria-label="Enlaces generales">
+        <a href="index.html">Inicio</a>
+        <a href="index.html#avisos">Avisos</a>
+        <a href="index.html#contacto">Contáctenos</a>
+      </nav>
+    </div>
+    <nav class="tabsbar" id="menu" aria-label="Menú principal">
+      <a href="index.html" class="tab">Inicio</a>
+      <a href="generar-listado.html" class="tab">Generar listado</a>
+      <a href="ingreso-datos.html" class="tab active" aria-current="page">Ingreso de datos</a>
+      <a href="#" class="tab">Auditorías</a>
+      <a href="#" class="tab">Herramientas</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="page-head">
+      <div class="title-row">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg>
+        <h1>Ingreso de trabajadores</h1>
+      </div>
+    </div>
+
+    <form class="card form-card" id="form-trabajador" novalidate>
+      <section class="form-section" aria-labelledby="sec-sociales">
+        <h2 id="sec-sociales">Datos sociales del trabajador</h2>
+        <div class="form-grid">
+          <div class="field">
+            <label for="ap-paterno">Apellido paterno <span class="req" aria-hidden="true">*</span></label>
+            <input type="text" id="ap-paterno" name="apellidoPaterno" autocomplete="off" required>
+            <p class="field-error" role="alert"></p>
+          </div>
+          <div class="field">
+            <label for="ap-materno">Apellido materno <span class="req" aria-hidden="true">*</span></label>
+            <input type="text" id="ap-materno" name="apellidoMaterno" autocomplete="off" required>
+            <p class="field-error" role="alert"></p>
+          </div>
+          <div class="field">
+            <label for="nombres">Nombres <span class="req" aria-hidden="true">*</span></label>
+            <input type="text" id="nombres" name="nombres" autocomplete="off" required>
+            <p class="field-error" role="alert"></p>
+          </div>
+          <div class="field">
+            <label for="dni">DNI <span class="req" aria-hidden="true">*</span></label>
+            <input type="text" id="dni" name="dni" inputmode="numeric" maxlength="8" pattern="\d{8}" autocomplete="off" required>
+            <p class="field-error" role="alert"></p>
+          </div>
+          <div class="field">
+            <label for="nacimiento">Fecha de nacimiento <span class="req" aria-hidden="true">*</span></label>
+            <input type="date" id="nacimiento" name="fechaNacimiento" required>
+            <p class="field-error" role="alert"></p>
+          </div>
+          <div class="field">
+            <label for="sexo">Sexo <span class="req" aria-hidden="true">*</span></label>
+            <select id="sexo" name="sexo" required>
+              <option value="">Elige una opción...</option>
+              <option value="Masculino">Masculino</option>
+              <option value="Femenino">Femenino</option>
+            </select>
+            <p class="field-error" role="alert"></p>
+          </div>
+          <div class="field">
+            <label for="nacionalidad">Nacionalidad <span class="req" aria-hidden="true">*</span></label>
+            <input type="text" id="nacionalidad" name="nacionalidad" list="lista-nacionalidades" autocomplete="off" required>
+            <datalist id="lista-nacionalidades">
+              <option value="Peruana"></option>
+              <option value="Venezolana"></option>
+              <option value="Colombiana"></option>
+              <option value="Ecuatoriana"></option>
+              <option value="Chilena"></option>
+              <option value="Boliviana"></option>
+              <option value="Argentina"></option>
+              <option value="Brasileña"></option>
+            </datalist>
+            <p class="field-error" role="alert"></p>
+          </div>
+        </div>
+      </section>
+
+      <section class="form-section" aria-labelledby="sec-direccion">
+        <h2 id="sec-direccion">Dirección personal</h2>
+        <div class="form-grid">
+          <div class="field span-2">
+            <label for="direccion">Dirección personal <span class="req" aria-hidden="true">*</span></label>
+            <input type="text" id="direccion" name="direccionPersonal" autocomplete="off" required>
+            <p class="field-error" role="alert"></p>
+          </div>
+        </div>
+      </section>
+
+      <section class="form-section" aria-labelledby="sec-empresa">
+        <h2 id="sec-empresa">Empresa</h2>
+        <div class="form-grid">
+          <div class="field span-2">
+            <label for="empresa">Empresa que labora <span class="req" aria-hidden="true">*</span></label>
+            <input type="text" id="empresa" name="empresa" autocomplete="off" required>
+            <p class="field-error" role="alert"></p>
+          </div>
+        </div>
+      </section>
+
+      <div class="form-actions">
+        <p class="form-status" id="form-status" role="status" aria-live="polite"></p>
+        <button type="reset" class="btn-ghost">Limpiar</button>
+        <button type="submit" class="btn-primary">Guardar trabajador</button>
+      </div>
+    </form>
+  </main>
+
+  <footer class="footer">
+    <p>&copy; <span id="year"></span> F1 Services &amp; Solutions · SOMMA</p>
+  </footer>
+
+  <script src="js/common.js"></script>
+  <script src="js/ingreso.js"></script>
+</body>
+</html>
