@@ -128,3 +128,18 @@ async function urlFirmada(bucket, ruta) {
   const { signedURL } = await res.json();
   return `${SUPABASE_URL}/storage/v1${signedURL}`;
 }
+
+// Pide al servidor que copie los documentos de un registro a SharePoint (no bloquea la página).
+async function enviarASharePoint(registroId) {
+  try {
+    await fetch(`${SUPABASE_URL}/functions/v1/enviar-sharepoint`, {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${await tokenVigente()}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ registro_id: registroId }),
+    });
+  } catch { /* el registro queda como "pendiente" y puede reenviarse */ }
+}

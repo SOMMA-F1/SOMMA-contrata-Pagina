@@ -135,6 +135,9 @@ form.addEventListener('submit', async (e) => {
       }),
     });
 
+    // Copia a SharePoint en segundo plano: si falla, el registro queda guardado y marcado con error.
+    enviarASharePoint(registroId);
+
     form.reset();
     status.className = 'form-status ok';
     status.textContent = 'Documentos guardados correctamente.';
