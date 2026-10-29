@@ -27,3 +27,14 @@ form.addEventListener('submit', async (e) => {
     boton.disabled = false;
   }
 });
+
+// Mostrar u ocultar la contraseña.
+const verClave = document.getElementById('ver-clave');
+verClave.addEventListener('click', () => {
+  const campo = document.getElementById('clave');
+  const mostrar = campo.type === 'password';
+  campo.type = mostrar ? 'text' : 'password';
+  campo.classList.toggle('visible', mostrar);
+  verClave.setAttribute('aria-pressed', String(mostrar));
+  verClave.setAttribute('aria-label', mostrar ? 'Ocultar contraseña' : 'Mostrar contraseña');
+});
