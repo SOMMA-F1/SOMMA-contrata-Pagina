@@ -211,3 +211,29 @@ async function llamarFuncionBorrado(nombre, cuerpo) {
 
 const eliminarDocumentoTrabajador = (id, soloFecha = false) => llamarFuncionBorrado('eliminar-documento-trabajador', { documento_id: id, solo_fecha: soloFecha });
 const eliminarTrabajadorServidor = (id) => llamarFuncionBorrado('eliminar-trabajador', { trabajador_id: id });
+
+// ---------- Fechas (AAAA-MM-DD) ----------
+function hoyIso() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+// Días desde hoy hasta la fecha (negativo si ya pasó).
+function diasHasta(iso) {
+  const [a, m, d] = iso.split('-').map(Number);
+  const [ha, hm, hd] = hoyIso().split('-').map(Number);
+  return Math.round((Date.UTC(a, m - 1, d) - Date.UTC(ha, hm - 1, hd)) / 86400000);
+}
+
+function fechaLegible(iso) {
+  const [a, m, d] = iso.split('-');
+  return `${d}/${m}/${a}`;
+}
+
+// Mismo cálculo que la base: un año después (29 de febrero pasa al 28).
+function masUnAnio(iso) {
+  const [a, m, d] = iso.split('-').map(Number);
+  let f = new Date(Date.UTC(a + 1, m - 1, d));
+  if (f.getUTCMonth() !== m - 1) f = new Date(Date.UTC(a + 1, m, 0));
+  return f.toISOString().slice(0, 10);
+}

@@ -33,7 +33,7 @@ function pintarTabla() {
       ['worker', v.nombre],
       ['', v.rut],
       ['', v.doc],
-      ['due' + (v.dias > 15 ? ' warn' : ''), `En ${v.dias} ${v.dias === 1 ? 'día' : 'días'}`],
+      ['due' + (v.dias > 15 ? ' warn' : ''), v.dias < 0 ? `Vencido hace ${-v.dias} ${v.dias === -1 ? 'día' : 'días'}` : v.dias === 0 ? 'Vence hoy' : `En ${v.dias} ${v.dias === 1 ? 'día' : 'días'}`],
     ];
     celdas.forEach(([clase, texto]) => {
       const td = document.createElement('td');
@@ -116,19 +116,23 @@ function pintarDonut() {
 }
 
 function pintarVencimientos() {
-  const total = vencimientos.length;
-  const criticos = vencimientos.filter((v) => v.dias < 15).length;
-  $('docs-total').textContent = total;
+  const vencidos = vencimientos.filter((v) => v.dias < 0).length;
+  const proximos = vencimientos.filter((v) => v.dias >= 0).length;
+  const criticos = vencimientos.filter((v) => v.dias >= 0 && v.dias < 15).length;
+  $('docs-total').textContent = proximos;
 
   const alerta = $('docs-alert');
-  alerta.classList.toggle('hidden', criticos === 0);
-  alerta.textContent = `⚠ ${criticos} vencen en menos de 15 días`;
+  const partes = [];
+  if (vencidos > 0) partes.push(`${vencidos} ya vencidos`);
+  if (criticos > 0) partes.push(`${criticos} vencen en menos de 15 días`);
+  alerta.classList.toggle('hidden', partes.length === 0);
+  alerta.textContent = `⚠ ${partes.join(' · ')}`;
 
   const badge = $('docs-badge');
-  if (total === 0) {
-    badge.textContent = 'Sin datos';
+  if (vencimientos.length === 0) {
+    badge.textContent = 'Sin vencimientos';
     badge.className = 'badge sin-datos';
-  } else if (criticos > 0) {
+  } else if (vencidos > 0 || criticos > 0) {
     badge.textContent = 'Crítico';
     badge.className = 'badge badge-red-soft';
   } else {
@@ -230,4 +234,40 @@ async function cargarDashboard() {
   }
 }
 
+// Documentos de trabajadores ya vencidos o que vencen en los próximos 30 días (según su regla de vencimiento).
+const ETIQUETAS_DOC = {
+  sctr: 'SCTR',
+  camo: 'CAMO',
+  curso_altura: 'Certificado de altura',
+  curso_riesgo_electrico: 'Certificado de riesgo eléctrico',
+  dni: 'DNI',
+};
+
+async function cargarVencimientos() {
+  try {
+    const l = new Date();
+    l.setDate(l.getDate() + 30);
+    const limite = `${l.getFullYear()}-${String(l.getMonth() + 1).padStart(2, '0')}-${String(l.getDate()).padStart(2, '0')}`;
+    const filas = await supabase(
+      'trabajador_documentos?select=tipo,fecha_vencimiento,trabajadores(apellido_paterno,apellido_materno,nombres,dni,perfiles(nombre))'
+      + `&fecha_vencimiento=lte.${limite}&order=fecha_vencimiento.asc&limit=500`,
+    );
+    vencimientos.length = 0;
+    filas.forEach((f) => {
+      const t = f.trabajadores;
+      if (!t) return;
+      const nombre = `${t.apellido_paterno} ${t.apellido_materno}, ${t.nombres}`;
+      vencimientos.push({
+        nombre: esAdmin && t.perfiles ? `${nombre} · ${t.perfiles.nombre}` : nombre,
+        rut: t.dni,
+        doc: ETIQUETAS_DOC[f.tipo] || f.tipo,
+        dias: diasHasta(f.fecha_vencimiento),
+      });
+    });
+    pintarTabla();
+    pintarVencimientos();
+  } catch { /* se queda en "Sin datos" */ }
+}
+
 cargarDashboard();
+cargarVencimientos();

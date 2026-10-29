@@ -213,9 +213,15 @@ function pintar() {
 
     celda(tr, t.rut);
     celda(tr, t.cargo);
-    const urgente = t.dias !== null && t.dias <= 15;
-    celda(tr, t.dias !== null && t.dias <= 15 ? `En ${t.dias} ${t.dias === 1 ? 'día' : 'días'}` : (t.venc || '-'),
-      urgente ? 'due' : '');
+    let textoVenc = '-';
+    let claseVenc = '';
+    if (t.venc) {
+      const d = t.dias;
+      if (d < 0) { textoVenc = `Vencido (${fechaLegible(t.venc)})`; claseVenc = 'due'; }
+      else if (d <= 30) { textoVenc = `En ${d} ${d === 1 ? 'día' : 'días'} (${fechaLegible(t.venc)})`; claseVenc = d <= 15 ? 'due' : 'due warn'; }
+      else textoVenc = fechaLegible(t.venc);
+    }
+    celda(tr, textoVenc, claseVenc);
 
     const tdEstado = document.createElement('td');
     const b = document.createElement('span');
@@ -281,22 +287,29 @@ pintar();
 
 async function cargarTrabajadores() {
   try {
-    const filas = await supabase('trabajadores?select=*,perfiles(nombre)&order=id.asc');
-    trabajadores.push(...filas.map((f) => ({
-      id: f.id,
-      nombre: `${f.apellido_paterno} ${f.apellido_materno}, ${f.nombres}`,
-      rut: f.dni,
-      cargo: '-',
-      venc: null,
-      dias: null,
-      estado: f.estado,
-      contrata: f.perfiles ? f.perfiles.nombre : '',
-      fila: f,
-    })));
+    const [filas, venc] = await Promise.all([
+      supabase('trabajadores?select=*,perfiles(nombre)&order=id.asc'),
+      supabase('vencimiento_trabajadores?select=*'),
+    ]);
+    const proximo = new Map(venc.map((v) => [v.trabajador_id, v.proximo_vencimiento]));
+    trabajadores.push(...filas.map((f) => aTrabajador(f, proximo.get(f.id) || null)));
     pintar();
   } catch (err) {
     mostrarAviso('No se pudo cargar el listado de trabajadores.');
   }
+}
+
+// Vuelve a calcular el próximo vencimiento de cada trabajador (tras cambiar documentos o fechas).
+async function actualizarVencimientos() {
+  try {
+    const venc = await supabase('vencimiento_trabajadores?select=*');
+    const proximo = new Map(venc.map((v) => [v.trabajador_id, v.proximo_vencimiento]));
+    trabajadores.forEach((t) => {
+      t.venc = proximo.get(t.id) || null;
+      t.dias = t.venc ? diasHasta(t.venc) : null;
+    });
+    pintar();
+  } catch { /* se mantiene lo que había */ }
 }
 
 cargarTrabajadores();
@@ -306,14 +319,14 @@ function nombreCompleto(f) {
   return `${f.apellido_paterno} ${f.apellido_materno}, ${f.nombres}`;
 }
 
-function aTrabajador(f) {
+function aTrabajador(f, venc = null) {
   return {
     id: f.id,
     nombre: nombreCompleto(f),
     rut: f.dni,
     cargo: '-',
-    venc: null,
-    dias: null,
+    venc,
+    dias: venc ? diasHasta(venc) : null,
     estado: f.estado,
     contrata: f.perfiles ? f.perfiles.nombre : '',
     fila: f,
@@ -323,8 +336,9 @@ function aTrabajador(f) {
 function reemplazarTrabajador(f) {
   const i = trabajadores.findIndex((t) => t.id === f.id);
   if (i >= 0) {
-    const nuevo = aTrabajador(f);
-    nuevo.contrata = trabajadores[i].contrata; // la respuesta de la edición no trae el nombre de la contrata
+    // La respuesta de la edición no trae la contrata ni el vencimiento: se conservan los que ya había.
+    const nuevo = aTrabajador(f, trabajadores[i].venc);
+    nuevo.contrata = trabajadores[i].contrata;
     trabajadores[i] = nuevo;
   }
   pintar();
@@ -510,6 +524,28 @@ function errorFechas(doc, entradas) {
   return '';
 }
 
+// Vencimiento: SCTR y DNI usan la fecha de fin/caducidad; CAMO y cursos vencen 1 año después del inicio.
+const REGLA_VENCIMIENTO = {
+  sctr: 'Vence en la fecha de fin',
+  camo: 'Vence 1 año después de la fecha de inicio',
+  curso_altura: 'Vence 1 año después de la fecha de inicio',
+  curso_riesgo_electrico: 'Vence 1 año después de la fecha de inicio',
+  dni: 'Vence en la fecha de caducidad',
+};
+
+function calcularVencimiento(tipo, f) {
+  if (tipo === 'sctr' || tipo === 'dni') return f.fecha_fin || null;
+  return f.fecha_inicio ? masUnAnio(f.fecha_inicio) : null;
+}
+
+function estadoVencimiento(iso) {
+  const d = diasHasta(iso);
+  if (d < 0) return { clase: 'no', texto: `Vencido el ${fechaLegible(iso)} (hace ${-d} ${d === -1 ? 'día' : 'días'})` };
+  if (d === 0) return { clase: 'pend', texto: `Vence hoy (${fechaLegible(iso)})` };
+  if (d <= 30) return { clase: 'pend', texto: `Vence el ${fechaLegible(iso)} (en ${d} ${d === 1 ? 'día' : 'días'})` };
+  return { clase: 'ok', texto: `Vigente hasta el ${fechaLegible(iso)}` };
+}
+
 function formatoFecha(iso) {
   const [a, m, d] = iso.split('-');
   return `${d}/${m}/${a}`;
@@ -549,6 +585,20 @@ function crearFilaDoc(doc) {
     info.appendChild(sp);
   }
 
+  // Vencimiento calculado según el tipo de documento; se actualiza al cambiar las fechas.
+  const venc = document.createElement('span');
+  venc.title = REGLA_VENCIMIENTO[doc.tipo];
+  info.appendChild(venc);
+  const refrescarVencimiento = () => {
+    const v = calcularVencimiento(doc.tipo, leerFechas(entradas));
+    venc.hidden = !v;
+    if (v) {
+      const e = estadoVencimiento(v);
+      venc.className = 'estado ' + e.clase;
+      venc.textContent = e.texto;
+    }
+  };
+
   // Fechas del documento (obligatorias para subirlo).
   const bloqueFechas = document.createElement('div');
   bloqueFechas.className = 'doc-fechas';
@@ -558,13 +608,21 @@ function crearFilaDoc(doc) {
     etiqueta.className = 'doc-fecha';
     const texto = document.createElement('span');
     texto.textContent = c.texto;
+    const obligatorio = document.createElement('i');
+    obligatorio.className = 'req';
+    obligatorio.textContent = ' *';
+    texto.appendChild(obligatorio);
     const campo = document.createElement('input');
     campo.type = 'date';
+    campo.required = true;
     campo.value = (guardado && guardado[c.clave]) || '';
     entradas[c.clave] = campo;
+    campo.addEventListener('input', refrescarVencimiento);
     etiqueta.append(texto, campo);
     bloqueFechas.appendChild(etiqueta);
   });
+
+  refrescarVencimiento();
 
   const acciones = document.createElement('div');
   acciones.className = 'doc-acciones';
@@ -762,3 +820,4 @@ async function quitarDocumento(doc, guardado, acciones) {
 }
 
 $('docs-cerrar').addEventListener('click', () => dlgDocs.close());
+dlgDocs.addEventListener('close', actualizarVencimientos);
