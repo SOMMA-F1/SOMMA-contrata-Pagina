@@ -136,6 +136,7 @@ form.addEventListener('submit', async (e) => {
     });
 
     // Copia a SharePoint en segundo plano: si falla, el registro queda guardado y marcado con error.
+    reintentados.add(registroId);
     enviarASharePoint(registroId);
 
     form.reset();
@@ -211,7 +212,7 @@ async function cargarRegistros() {
       reintentados.add(f.id);
       enviarASharePoint(f.id);
     });
-    if (filas.some((f) => f.sharepoint_estado === 'pendiente')) setTimeout(cargarRegistros, 8000);
+    if (filas.some((f) => ['pendiente', 'enviando'].includes(f.sharepoint_estado))) setTimeout(cargarRegistros, 8000);
 
     cuerpoRegistros.replaceChildren(...filas.map((f) => {
       const tr = document.createElement('tr');
@@ -242,7 +243,7 @@ async function cargarRegistros() {
 
       const tdSp = document.createElement('td');
       const estadoSp = document.createElement('span');
-      const textos = { enviado: ['ok', 'Enviado'], pendiente: ['pend', 'Enviando…'], error: ['no', 'Error'] };
+      const textos = { enviado: ['ok', 'Enviado'], pendiente: ['pend', 'Enviando…'], enviando: ['pend', 'Enviando…'], error: ['no', 'Error'] };
       const [clase, texto] = textos[f.sharepoint_estado] || textos.pendiente;
       estadoSp.className = 'estado ' + clase;
       estadoSp.textContent = texto;

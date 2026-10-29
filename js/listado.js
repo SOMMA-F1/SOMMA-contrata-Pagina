@@ -511,7 +511,7 @@ function crearFilaDoc(doc) {
   info.append(nombre, estadoDoc);
   if (guardado) {
     const sp = document.createElement('span');
-    const textosSp = { enviado: ['ok', 'Enviado a SharePoint'], pendiente: ['pend', 'Enviando a SharePoint…'], error: ['no', 'Error al enviar a SharePoint'] };
+    const textosSp = { enviado: ['ok', 'Enviado a SharePoint'], pendiente: ['pend', 'Enviando a SharePoint…'], enviando: ['pend', 'Enviando a SharePoint…'], error: ['no', 'Error al enviar a SharePoint'] };
     const [clase, texto] = textosSp[guardado.sharepoint_estado] || textosSp.pendiente;
     sp.className = 'estado ' + clase;
     sp.textContent = texto;
@@ -600,7 +600,7 @@ async function cargarDocumentos() {
       docsReintentados.add(f.id);
       enviarDocumentoTrabajador(f.id);
     });
-    if (filas.some((f) => f.sharepoint_estado === 'pendiente') && dlgDocs.open) setTimeout(cargarDocumentos, 6000);
+    if (filas.some((f) => ['pendiente', 'enviando'].includes(f.sharepoint_estado)) && dlgDocs.open) setTimeout(cargarDocumentos, 6000);
   } catch {
     mensajeDocs('No se pudieron cargar los documentos.', 'error');
   }
@@ -642,6 +642,7 @@ async function subirDocumento(doc, archivo, acciones) {
     });
     if (previo) await borrarArchivos(BUCKET_DOCS, [previo.ruta]);
     // Copia a SharePoint en segundo plano; el estado se ve en la fila.
+    docsReintentados.add(guardado.id);
     enviarDocumentoTrabajador(guardado.id);
     await cargarDocumentos();
     mensajeDocs(`${doc.texto} guardado.`, 'ok');

@@ -97,6 +97,16 @@ Deno.serve(async (req) => {
   if (!reg) return json({ error: "Registro no encontrado" }, 404);
   if (reg.sharepoint_estado === "enviado") return json({ estado: "enviado" });
 
+  // Reserva el envío de forma atómica: evita duplicados si la página llama dos veces.
+  // Un envío "enviando" de hace más de 2 minutos se considera caído y puede retomarse.
+  const caducado = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+  const { data: tomado } = await admin.from("documentos_campo")
+    .update({ sharepoint_estado: "enviando", sharepoint_inicio: new Date().toISOString() })
+    .eq("id", reg.id)
+    .or(`sharepoint_estado.in.(pendiente,error),and(sharepoint_estado.eq.enviando,sharepoint_inicio.lt.${caducado})`)
+    .select("id");
+  if (!tomado?.length) return json({ estado: "enviando" });
+
   EdgeRuntime.waitUntil(procesar(reg as unknown as Registro, admin));
   return json({ estado: "enviando" }, 202);
 });

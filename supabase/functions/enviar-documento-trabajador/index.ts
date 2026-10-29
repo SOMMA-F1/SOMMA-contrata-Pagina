@@ -3,7 +3,7 @@ import { encodeBase64 } from "jsr:@std/encoding@1/base64";
 
 // Envía un documento de trabajador (SCTR, CAMO, cursos, DNI) a SharePoint con el mismo flujo de Power Automate.
 // Estructura en SharePoint:
-//   DOCUMENTOS DEL TRABAJADOR / CONTRATA / APELLIDOS NOMBRES (DNI) / fecha y hora de subida / <documento>.<extensión>
+//   DOCUMENTOS DEL TRABAJADOR / CONTRATA / APELLIDOS NOMBRES (DNI) / DOCUMENTO (SCTR, CAMO…) / fecha y hora de subida / <documento>.<extensión>
 // La dirección del flujo es secreta y vive en la tabla privada public.configuracion (clave sharepoint_webhook).
 
 declare const EdgeRuntime: { waitUntil(p: Promise<unknown>): void };
@@ -71,12 +71,13 @@ async function procesar(doc: Documento, admin: ReturnType<typeof createClient>) 
     const { data: blob, error } = await admin.storage.from(BUCKET).download(doc.ruta);
     if (error || !blob) throw new Error("No se pudo leer el archivo");
 
+    const etiqueta = ETIQUETAS[doc.tipo] ?? limpiar(doc.tipo);
     const res = await fetch(webhook, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        carpeta: `${RAIZ}/${contrata}/${trabajador}/${fecha}`,
-        nombre: ETIQUETAS[doc.tipo] ?? limpiar(doc.tipo),
+        carpeta: `${RAIZ}/${contrata}/${trabajador}/${etiqueta}/${fecha}`,
+        nombre: etiqueta,
         extension: extension(doc.nombre, blob.type),
         contenido: encodeBase64(new Uint8Array(await blob.arrayBuffer())),
       }),
@@ -112,6 +113,16 @@ Deno.serve(async (req) => {
     .maybeSingle();
   if (!doc) return json({ error: "Documento no encontrado" }, 404);
   if (doc.sharepoint_estado === "enviado") return json({ estado: "enviado" });
+
+  // Reserva el envío de forma atómica: evita duplicados si la página llama dos veces.
+  // Un envío "enviando" de hace más de 2 minutos se considera caído y puede retomarse.
+  const caducado = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+  const { data: tomado } = await admin.from("trabajador_documentos")
+    .update({ sharepoint_estado: "enviando", sharepoint_inicio: new Date().toISOString() })
+    .eq("id", doc.id)
+    .or(`sharepoint_estado.in.(pendiente,error),and(sharepoint_estado.eq.enviando,sharepoint_inicio.lt.${caducado})`)
+    .select("id");
+  if (!tomado?.length) return json({ estado: "enviando" });
 
   EdgeRuntime.waitUntil(procesar(doc as unknown as Documento, admin));
   return json({ estado: "enviando" }, 202);
