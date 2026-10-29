@@ -452,21 +452,12 @@ $('estado-cerrar').addEventListener('click', () => dlgEstado.close());
 // --- Eliminar ---
 async function eliminarTrabajador(t) {
   if (!confirm(`¿Eliminar a ${t.nombre} (DNI ${t.rut})?\n\nEsta acción no se puede deshacer.`)) return;
-  try {
-    const docs = await supabase(`trabajador_documentos?select=ruta&trabajador_id=eq.${t.id}`);
-    const borrados = await supabase(`trabajadores?id=eq.${t.id}`, {
-      method: 'DELETE',
-      headers: { Prefer: 'return=representation' },
-    });
-    if (!borrados || borrados.length === 0) throw new Error('sin permiso');
-    await borrarArchivos(BUCKET_DOCS, docs.map((d) => d.ruta));
-    const i = trabajadores.findIndex((x) => x.id === t.id);
-    if (i >= 0) trabajadores.splice(i, 1);
-    pintar();
-    mostrarAviso('Trabajador eliminado.');
-  } catch {
-    mostrarAviso('No se pudo eliminar al trabajador.');
-  }
+  const error = await eliminarTrabajadorServidor(t.id);
+  if (error) { mostrarAviso(error); return; }
+  const i = trabajadores.findIndex((x) => x.id === t.id);
+  if (i >= 0) trabajadores.splice(i, 1);
+  pintar();
+  mostrarAviso('Trabajador eliminado.');
 }
 
 // ---------- Documentos del trabajador ----------
@@ -632,6 +623,11 @@ async function subirDocumento(doc, archivo, acciones) {
     const limpio = archivo.name.replace(/[^a-zA-Z0-9._-]/g, '_');
     const ruta = `${docsDe.fila.contrata_id}/trabajadores/${docsDe.id}/${doc.tipo}-${Date.now()}-${limpio}`;
     await subirArchivo(BUCKET_DOCS, ruta, archivo);
+    if (previo) {
+      // El documento anterior se elimina completo (SharePoint y base) antes de registrar el nuevo.
+      const error = await eliminarDocumentoTrabajador(previo.id, true);
+      if (error) { await borrarArchivos(BUCKET_DOCS, [ruta]); mensajeDocs(error, 'error'); ocupar(acciones, false); return; }
+    }
     const [guardado] = await supabase('trabajador_documentos?on_conflict=trabajador_id,tipo', {
       method: 'POST',
       headers: { Prefer: 'resolution=merge-duplicates,return=representation' },
@@ -640,7 +636,6 @@ async function subirDocumento(doc, archivo, acciones) {
         subido_en: new Date().toISOString(), sharepoint_estado: 'pendiente', sharepoint_detalle: null, sharepoint_enviado_en: null,
       }),
     });
-    if (previo) await borrarArchivos(BUCKET_DOCS, [previo.ruta]);
     // Copia a SharePoint en segundo plano; el estado se ve en la fila.
     docsReintentados.add(guardado.id);
     enviarDocumentoTrabajador(guardado.id);
@@ -655,15 +650,15 @@ async function subirDocumento(doc, archivo, acciones) {
 async function quitarDocumento(doc, guardado, acciones) {
   if (!confirm(`¿Quitar el documento ${doc.texto}?`)) return;
   ocupar(acciones, true);
-  try {
-    await supabase(`trabajador_documentos?id=eq.${guardado.id}`, { method: 'DELETE' });
-    await borrarArchivos(BUCKET_DOCS, [guardado.ruta]);
-    await cargarDocumentos();
-    mensajeDocs(`${doc.texto} quitado.`, 'ok');
-  } catch {
-    mensajeDocs('No se pudo quitar el documento.', 'error');
+  mensajeDocs(`Quitando ${doc.texto}...`);
+  const error = await eliminarDocumentoTrabajador(guardado.id);
+  if (error) {
+    mensajeDocs(error, 'error');
     ocupar(acciones, false);
+    return;
   }
+  await cargarDocumentos();
+  mensajeDocs(`${doc.texto} quitado.`, 'ok');
 }
 
 $('docs-cerrar').addEventListener('click', () => dlgDocs.close());

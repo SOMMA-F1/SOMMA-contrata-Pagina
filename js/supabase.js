@@ -188,3 +188,26 @@ async function enviarDocumentoTrabajador(documentoId) {
     });
   } catch { /* queda como "pendiente" y se reintenta al abrir el popup */ }
 }
+
+// Llama a una función del servidor que borra en SharePoint y en Supabase. Devuelve el mensaje de error o null.
+async function llamarFuncionBorrado(nombre, cuerpo) {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/${nombre}`, {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${await tokenVigente()}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(cuerpo),
+    });
+    if (res.ok) return null;
+    const datos = await res.json().catch(() => ({}));
+    return datos.error || 'No se pudo completar la eliminación.';
+  } catch {
+    return 'No se pudo completar la eliminación.';
+  }
+}
+
+const eliminarDocumentoTrabajador = (id, soloFecha = false) => llamarFuncionBorrado('eliminar-documento-trabajador', { documento_id: id, solo_fecha: soloFecha });
+const eliminarTrabajadorServidor = (id) => llamarFuncionBorrado('eliminar-trabajador', { trabajador_id: id });
