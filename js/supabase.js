@@ -143,3 +143,19 @@ async function enviarASharePoint(registroId) {
     });
   } catch { /* el registro queda como "pendiente" y puede reenviarse */ }
 }
+
+// Elimina un registro de campo: SharePoint (papelera), archivos y fila. Devuelve el mensaje de error o null.
+async function eliminarRegistro(registroId) {
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/eliminar-registro`, {
+    method: 'POST',
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${await tokenVigente()}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ registro_id: registroId }),
+  });
+  if (res.ok) return null;
+  const cuerpo = await res.json().catch(() => ({}));
+  return cuerpo.error || 'No se pudo eliminar el registro.';
+}

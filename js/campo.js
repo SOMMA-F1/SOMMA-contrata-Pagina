@@ -190,7 +190,7 @@ function filaVacia(texto) {
   const tr = document.createElement('tr');
   tr.className = 'empty-row';
   const td = document.createElement('td');
-  td.colSpan = esAdmin ? 7 : 6;
+  td.colSpan = esAdmin ? 8 : 7;
   td.textContent = texto;
   tr.appendChild(td);
   cuerpoRegistros.replaceChildren(tr);
@@ -261,6 +261,31 @@ async function cargarRegistros() {
         tdSp.append(' ', reintentar);
       }
       tr.appendChild(tdSp);
+
+      const tdAcc = document.createElement('td');
+      const eliminar = document.createElement('button');
+      eliminar.type = 'button';
+      eliminar.className = 'btn-eliminar';
+      eliminar.textContent = 'Eliminar';
+      eliminar.addEventListener('click', async () => {
+        const ok = confirm(`¿Eliminar el registro "${f.actividad}" y sus documentos?\n\nTambién se enviará su carpeta a la papelera de SharePoint.`);
+        if (!ok) return;
+        eliminar.disabled = true;
+        eliminar.textContent = 'Eliminando…';
+        const error = await eliminarRegistro(f.id);
+        if (error) {
+          eliminar.disabled = false;
+          eliminar.textContent = 'Eliminar';
+          status.className = 'form-status error';
+          status.textContent = error;
+          return;
+        }
+        status.className = 'form-status ok';
+        status.textContent = 'Registro eliminado.';
+        cargarRegistros();
+      });
+      tdAcc.appendChild(eliminar);
+      tr.appendChild(tdAcc);
       return tr;
     }));
   } catch {

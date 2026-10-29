@@ -512,3 +512,9 @@ td.due.warn { color: var(--warn-text); }
 .chip-doc:hover { background: var(--f1-orange); border-color: var(--f1-orange); color: #fff; }
 .chip-doc:disabled { opacity: 0.6; cursor: wait; }
 .estado.pend { background: #fef3c7; color: #b45309; }
+.btn-eliminar {
+  padding: 0.25rem 0.65rem; border: 1px solid var(--bad); border-radius: 6px; background: #fff;
+  color: var(--bad-text); font: inherit; font-size: 0.75rem; font-weight: 700; cursor: pointer;
+}
+.btn-eliminar:hover { background: var(--bad); color: #fff; }
+.btn-eliminar:disabled { opacity: 0.6; cursor: wait; }
