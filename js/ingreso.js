@@ -35,7 +35,7 @@ campos.forEach((c) => {
   });
 });
 
-form.addEventListener('submit', (e) => {
+form.addEventListener('submit', async (e) => {
   e.preventDefault();
   status.className = 'form-status';
 
@@ -47,10 +47,38 @@ form.addEventListener('submit', (e) => {
     return;
   }
 
-  // Pendiente: guardar en la base de datos cuando se conecte.
-  // Por ahora los datos no se guardan en ningún sitio.
-  status.textContent = 'Datos válidos. El guardado se activará cuando se conecte la base de datos.';
-  status.classList.add('ok');
+  const val = (id) => document.getElementById(id).value.trim();
+  const boton = form.querySelector('button[type="submit"]');
+  boton.disabled = true;
+  status.textContent = 'Guardando...';
+
+  try {
+    await supabase('trabajadores', {
+      method: 'POST',
+      headers: { Prefer: 'return=minimal' },
+      body: JSON.stringify({
+        apellido_paterno: val('ap-paterno'),
+        apellido_materno: val('ap-materno'),
+        nombres: val('nombres'),
+        dni: val('dni'),
+        fecha_nacimiento: val('nacimiento'),
+        sexo: val('sexo'),
+        nacionalidad: val('nacionalidad'),
+        direccion_personal: val('direccion'),
+        empresa: val('empresa'),
+      }),
+    });
+    form.reset();
+    status.className = 'form-status ok';
+    status.textContent = 'Trabajador guardado correctamente.';
+  } catch (err) {
+    status.className = 'form-status error';
+    status.textContent = err.code === '23505'
+      ? 'Ya existe un trabajador con ese DNI.'
+      : 'No se pudo guardar. Inténtalo de nuevo.';
+  } finally {
+    boton.disabled = false;
+  }
 });
 
 form.addEventListener('reset', () => {

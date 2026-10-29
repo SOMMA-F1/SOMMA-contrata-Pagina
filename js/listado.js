@@ -1,6 +1,6 @@
-// Aún no hay fuente de datos conectada: el listado arranca vacío.
-// Cuando exista, solo hay que llenar este arreglo con objetos:
+// Se llena desde Supabase (tabla trabajadores). Forma de cada objeto:
 // { id, nombre, rut, cargo, venc: 'AAAA-MM-DD' | null, dias: número | null, estado: 'Acreditado' | 'No acreditado' }
+// "rut" muestra el DNI; cargo y vencimiento aún no se registran.
 const trabajadores = [];
 
 const $ = (id) => document.getElementById(id);
@@ -262,3 +262,23 @@ $('btn-filtros').addEventListener('click', () => {
 });
 
 pintar();
+
+async function cargarTrabajadores() {
+  try {
+    const filas = await supabase('trabajadores?select=*&order=id.asc');
+    trabajadores.push(...filas.map((f) => ({
+      id: f.id,
+      nombre: `${f.apellido_paterno} ${f.apellido_materno}, ${f.nombres}`,
+      rut: f.dni,
+      cargo: '-',
+      venc: null,
+      dias: null,
+      estado: f.estado,
+    })));
+    pintar();
+  } catch (err) {
+    mostrarAviso('No se pudo cargar el listado de trabajadores.');
+  }
+}
+
+cargarTrabajadores();
