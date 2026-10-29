@@ -58,9 +58,9 @@ a { color: inherit; }
 .brand-text strong { font-size: 1rem; font-weight: 900; letter-spacing: 0.04em; }
 .brand-text small { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.18em; color: rgba(255, 255, 255, 0.5); }
 
-.toplinks { display: flex; gap: 1.75rem; }
-.toplinks a { color: rgba(255, 255, 255, 0.85); text-decoration: none; font-size: 0.9rem; font-weight: 600; }
-.toplinks a:hover { color: #fff; }
+.toplinks { display: flex; align-items: center; gap: 0.25rem; }
+.toplinks > a { padding: 0.45rem 0.8rem; border-radius: 8px; color: rgba(255, 255, 255, 0.85); text-decoration: none; font-size: 0.88rem; font-weight: 600; }
+.toplinks > a:hover { background: rgba(255, 255, 255, 0.12); color: #fff; }
 
 .menu-toggle { display: none; background: none; border: 0; color: #fff; padding: 0.25rem; }
 
@@ -437,10 +437,15 @@ td.due.warn { color: var(--warn-text); }
 .field input[type="file"]::file-selector-button:hover { background: var(--f1-orange); }
 
 /* ---------- Inicio de sesión ---------- */
-.sesion-usuario { color: #fff; display: inline-flex; align-items: center; gap: 0.75rem; }
-.sesion-usuario span { font-size: 0.85rem; opacity: 0.85; }
-.sesion-usuario button { padding: 0; border: 0; background: none; color: inherit; font: inherit; font-weight: 600; cursor: pointer; }
-.sesion-usuario button:hover { color: var(--f1-orange); }
+.sesion-usuario { display: flex; align-items: center; gap: 0.65rem; margin-left: 0.75rem; padding-left: 1rem; border-left: 1px solid rgba(255, 255, 255, 0.2); color: #fff; }
+.sesion-avatar { display: grid; place-items: center; width: 2.1rem; height: 2.1rem; flex: none; border-radius: 50%; background: var(--f1-orange); color: #fff; font-size: 0.9rem; font-weight: 800; }
+.sesion-datos { display: grid; line-height: 1.2; min-width: 0; }
+.sesion-datos strong { max-width: 12rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.82rem; font-weight: 700; }
+.sesion-datos small { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255, 255, 255, 0.55); }
+.btn-salir { display: inline-flex; align-items: center; gap: 0.4rem; margin-left: 0.4rem; padding: 0.45rem 0.85rem; border: 1px solid rgba(255, 255, 255, 0.35); border-radius: 999px; background: transparent; color: #fff; font: inherit; font-size: 0.8rem; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.btn-salir:hover { background: var(--f1-orange); border-color: var(--f1-orange); }
+.tab-salir { display: none; border: 0; text-align: left; cursor: pointer; }
+@media (max-width: 640px) { .tab-salir { display: block; margin-top: 0.75rem; background: rgba(255, 255, 255, 0.06); } }
 
 /* Login: panel de marca + formulario */
 .login-body { min-height: 100vh; background: var(--f1-cream); }
