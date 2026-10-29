@@ -554,3 +554,17 @@ td.due.warn { color: var(--warn-text); }
 .doc-fecha input { padding: 0.3rem 0.45rem; border: 1px solid var(--f1-border); border-radius: 6px; background: #fff; color: var(--f1-ink); font: inherit; font-size: 0.8rem; }
 .doc-fecha input:focus { outline: 2px solid var(--f1-orange); outline-offset: 0; border-color: transparent; }
 .doc-fecha .req { font-style: normal; }
+
+/* Tabla de documentos de campo registrados */
+.registros .tabla-listado { min-width: 50rem; table-layout: auto; }
+.registros tbody td { vertical-align: middle; }
+.registros td.nowrap { white-space: nowrap; }
+.registros td.col-texto { min-width: 8rem; max-width: 16rem; overflow-wrap: anywhere; }
+.registros thead th { white-space: nowrap; }
+.registros tbody tr:hover { background: var(--f1-tag); }
+.btn-docs {
+  padding: 0.35rem 0.8rem; border: 1px solid var(--f1-border); border-radius: 999px; background: #fff;
+  color: var(--f1-ink); font: inherit; font-size: 0.78rem; font-weight: 700; cursor: pointer;
+}
+.btn-docs:hover { background: var(--f1-ink); border-color: var(--f1-ink); color: #fff; }
+.campo-docs-sub { margin: -0.6rem 0 1rem; }

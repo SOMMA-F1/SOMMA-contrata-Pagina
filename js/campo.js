@@ -217,11 +217,12 @@ async function cargarRegistros() {
     cuerpoRegistros.replaceChildren(...filas.map((f) => {
       const tr = document.createElement('tr');
       const celda = (texto) => { const td = document.createElement('td'); td.textContent = texto; tr.appendChild(td); return td; };
-      celda(fechaLegible(f.fecha));
-      if (esAdmin) celda(f.perfiles ? f.perfiles.nombre : '-');
-      celda(f.actividad);
-      celda(f.site);
+      celda(fechaLegible(f.fecha)).className = 'nowrap';
+      if (esAdmin) celda(f.perfiles ? f.perfiles.nombre : '-').className = 'col-texto';
+      celda(f.actividad).className = 'col-texto';
+      celda(f.site).className = 'col-texto';
       const tdRiesgo = document.createElement('td');
+      tdRiesgo.className = 'nowrap';
       const marca = document.createElement('span');
       marca.className = 'estado ' + (f.alto_riesgo ? 'no' : 'ok');
       marca.textContent = f.alto_riesgo ? 'Sí' : 'No';
@@ -229,19 +230,17 @@ async function cargarRegistros() {
       tr.appendChild(tdRiesgo);
 
       const tdDocs = document.createElement('td');
-      tdDocs.className = 'docs-chips';
-      f.archivos.forEach((a) => {
-        const b = document.createElement('button');
-        b.type = 'button';
-        b.className = 'chip-doc';
-        b.textContent = a.texto;
-        b.title = a.nombre;
-        b.addEventListener('click', () => abrirArchivo(b, a.ruta));
-        tdDocs.appendChild(b);
-      });
+      tdDocs.className = 'nowrap';
+      const verDocs = document.createElement('button');
+      verDocs.type = 'button';
+      verDocs.className = 'btn-docs';
+      verDocs.textContent = `Ver documentos (${f.archivos.length})`;
+      verDocs.addEventListener('click', () => abrirListaDocumentos(f));
+      tdDocs.appendChild(verDocs);
       tr.appendChild(tdDocs);
 
       const tdSp = document.createElement('td');
+      tdSp.className = 'nowrap';
       const estadoSp = document.createElement('span');
       const textos = { enviado: ['ok', 'Enviado'], pendiente: ['pend', 'Enviando…'], enviando: ['pend', 'Enviando…'], error: ['no', 'Error'] };
       const [clase, texto] = textos[f.sharepoint_estado] || textos.pendiente;
@@ -264,6 +263,7 @@ async function cargarRegistros() {
       tr.appendChild(tdSp);
 
       const tdAcc = document.createElement('td');
+      tdAcc.className = 'nowrap';
       const eliminar = document.createElement('button');
       eliminar.type = 'button';
       eliminar.className = 'btn-eliminar';
@@ -297,3 +297,36 @@ async function cargarRegistros() {
 
 document.getElementById('btn-recargar').addEventListener('click', cargarRegistros);
 cargarRegistros();
+
+// ---------- Ventana con los documentos de un registro ----------
+const dlgLista = document.getElementById('dlg-campo-docs');
+
+function abrirListaDocumentos(f) {
+  document.getElementById('campo-docs-titulo').textContent = f.actividad;
+  document.getElementById('campo-docs-sub').textContent =
+    `${fechaLegible(f.fecha)} · ${f.alto_riesgo ? 'Trabajo de alto riesgo' : 'Sin alto riesgo'}${f.perfiles && esAdmin ? ' · ' + f.perfiles.nombre : ''}`;
+  const lista = document.getElementById('campo-docs-lista');
+  lista.replaceChildren();
+  f.archivos.forEach((a) => {
+    const fila = document.createElement('div');
+    fila.className = 'doc-fila';
+    const info = document.createElement('div');
+    info.className = 'doc-info';
+    const nombre = document.createElement('strong');
+    nombre.textContent = a.texto;
+    const archivo = document.createElement('span');
+    archivo.className = 'doc-estado';
+    archivo.textContent = a.nombre;
+    info.append(nombre, archivo);
+    const abrir = document.createElement('button');
+    abrir.type = 'button';
+    abrir.className = 'chip-doc';
+    abrir.textContent = 'Abrir';
+    abrir.addEventListener('click', () => abrirArchivo(abrir, a.ruta));
+    fila.append(info, abrir);
+    lista.appendChild(fila);
+  });
+  dlgLista.showModal();
+}
+
+document.getElementById('campo-docs-cerrar').addEventListener('click', () => dlgLista.close());
