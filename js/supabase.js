@@ -16,12 +16,12 @@ function guardarSesion(sesion) {
 
 function cerrarSesion() {
   try { localStorage.removeItem(CLAVE_SESION); } catch { /* sin almacenamiento */ }
-  location.replace('login.html');
+  location.replace('/login');
 }
 
 // Las páginas internas llaman a esta función: sin sesión se redirige al login.
 function requerirSesion() {
-  if (!leerSesion()) location.replace('login.html');
+  if (!leerSesion()) location.replace('/login');
 }
 
 async function pedirAuth(ruta, cuerpo) {

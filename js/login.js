@@ -18,7 +18,7 @@ form.addEventListener('submit', async (e) => {
   status.textContent = 'Ingresando...';
   try {
     await iniciarSesion(usuario, clave);
-    location.replace('index.html');
+    location.replace('/');
   } catch (err) {
     status.className = 'form-status error';
     status.textContent = err.message === 'Invalid login credentials'
