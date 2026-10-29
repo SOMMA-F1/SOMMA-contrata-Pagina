@@ -488,6 +488,7 @@ const TOTAL_DOCS = 5;
 const dlgDocs = $('dlg-docs');
 let docsDe = null;
 let docsGuardados = new Map();
+const docsReintentados = new Set();
 
 function mensajeDocs(texto, tipo = '') {
   const el = $('docs-status');
@@ -508,6 +509,15 @@ function crearFilaDoc(doc) {
   estadoDoc.className = 'doc-estado' + (guardado ? ' cargado' : '');
   estadoDoc.textContent = guardado ? guardado.nombre : 'Pendiente';
   info.append(nombre, estadoDoc);
+  if (guardado) {
+    const sp = document.createElement('span');
+    const textosSp = { enviado: ['ok', 'Enviado a SharePoint'], pendiente: ['pend', 'Enviando a SharePoint…'], error: ['no', 'Error al enviar a SharePoint'] };
+    const [clase, texto] = textosSp[guardado.sharepoint_estado] || textosSp.pendiente;
+    sp.className = 'estado ' + clase;
+    sp.textContent = texto;
+    if (guardado.sharepoint_detalle) sp.title = guardado.sharepoint_detalle;
+    info.appendChild(sp);
+  }
 
   const acciones = document.createElement('div');
   acciones.className = 'doc-acciones';
@@ -542,6 +552,18 @@ function crearFilaDoc(doc) {
     quitar.textContent = 'Quitar';
     quitar.addEventListener('click', () => quitarDocumento(doc, guardado, acciones));
     acciones.append(ver, quitar);
+    if (guardado.sharepoint_estado === 'error') {
+      const reintentar = document.createElement('button');
+      reintentar.type = 'button';
+      reintentar.className = 'chip-doc';
+      reintentar.textContent = 'Reintentar envío';
+      reintentar.addEventListener('click', async () => {
+        reintentar.disabled = true;
+        await enviarDocumentoTrabajador(guardado.id);
+        setTimeout(cargarDocumentos, 6000);
+      });
+      acciones.append(reintentar);
+    }
   }
 
   fila.append(info, acciones);
@@ -573,6 +595,12 @@ async function cargarDocumentos() {
     const filas = await supabase(`trabajador_documentos?select=*&trabajador_id=eq.${docsDe.id}`);
     docsGuardados = new Map(filas.map((f) => [f.tipo, f]));
     pintarDocumentos();
+    // Si algún envío a SharePoint se perdió, se reintenta; mientras haya pendientes se vuelve a consultar.
+    filas.filter((f) => f.sharepoint_estado === 'pendiente' && !docsReintentados.has(f.id)).forEach((f) => {
+      docsReintentados.add(f.id);
+      enviarDocumentoTrabajador(f.id);
+    });
+    if (filas.some((f) => f.sharepoint_estado === 'pendiente') && dlgDocs.open) setTimeout(cargarDocumentos, 6000);
   } catch {
     mensajeDocs('No se pudieron cargar los documentos.', 'error');
   }
@@ -604,12 +632,17 @@ async function subirDocumento(doc, archivo, acciones) {
     const limpio = archivo.name.replace(/[^a-zA-Z0-9._-]/g, '_');
     const ruta = `${docsDe.fila.contrata_id}/trabajadores/${docsDe.id}/${doc.tipo}-${Date.now()}-${limpio}`;
     await subirArchivo(BUCKET_DOCS, ruta, archivo);
-    await supabase('trabajador_documentos?on_conflict=trabajador_id,tipo', {
+    const [guardado] = await supabase('trabajador_documentos?on_conflict=trabajador_id,tipo', {
       method: 'POST',
-      headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
-      body: JSON.stringify({ trabajador_id: docsDe.id, tipo: doc.tipo, nombre: archivo.name, ruta, subido_en: new Date().toISOString() }),
+      headers: { Prefer: 'resolution=merge-duplicates,return=representation' },
+      body: JSON.stringify({
+        trabajador_id: docsDe.id, tipo: doc.tipo, nombre: archivo.name, ruta,
+        subido_en: new Date().toISOString(), sharepoint_estado: 'pendiente', sharepoint_detalle: null, sharepoint_enviado_en: null,
+      }),
     });
     if (previo) await borrarArchivos(BUCKET_DOCS, [previo.ruta]);
+    // Copia a SharePoint en segundo plano; el estado se ve en la fila.
+    enviarDocumentoTrabajador(guardado.id);
     await cargarDocumentos();
     mensajeDocs(`${doc.texto} guardado.`, 'ok');
   } catch {

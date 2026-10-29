@@ -173,3 +173,18 @@ async function borrarArchivos(bucket, rutas) {
     body: JSON.stringify({ prefixes: rutas }),
   });
 }
+
+// Pide al servidor que copie un documento de trabajador a SharePoint (no bloquea la página).
+async function enviarDocumentoTrabajador(documentoId) {
+  try {
+    await fetch(`${SUPABASE_URL}/functions/v1/enviar-documento-trabajador`, {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${await tokenVigente()}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ documento_id: documentoId }),
+    });
+  } catch { /* queda como "pendiente" y se reintenta al abrir el popup */ }
+}
