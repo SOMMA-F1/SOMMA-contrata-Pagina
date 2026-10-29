@@ -424,3 +424,14 @@ td.due.warn { color: var(--warn-text); }
   .panel-filtros { right: auto; left: 0; width: min(17rem, calc(100vw - 2.5rem)); }
   .btn-dark { width: 100%; justify-content: center; }
 }
+
+/* ---------- Documentos de campo ---------- */
+.docs-ayuda { margin: -0.4rem 0 0.9rem; }
+#sec-docs { border-bottom: 0; margin-bottom: 0.5rem; }
+.field input[type="file"] { padding: 0.45rem 0.6rem; background: var(--f1-cream); }
+.field.invalid input[type="file"] { border-color: var(--bad); }
+.field input[type="file"]::file-selector-button {
+  margin-right: 0.7rem; padding: 0.35rem 0.7rem; border: 0; border-radius: 5px;
+  background: var(--f1-ink); color: #fff; font: inherit; font-size: 0.8rem; font-weight: 600; cursor: pointer;
+}
+.field input[type="file"]::file-selector-button:hover { background: var(--f1-orange); }

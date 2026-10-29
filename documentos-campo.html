@@ -43,6 +43,50 @@
         <h1>Documentos de Campo</h1>
       </div>
     </div>
+
+    <form class="card form-card" id="form-campo" novalidate>
+      <section class="form-section" aria-labelledby="sec-actividad">
+        <h2 id="sec-actividad">Datos de la actividad</h2>
+        <div class="form-grid">
+          <div class="field span-2">
+            <label for="actividad">Actividad <span class="req" aria-hidden="true">*</span></label>
+            <input type="text" id="actividad" name="actividad" autocomplete="off" required>
+            <p class="field-error" role="alert"></p>
+          </div>
+          <div class="field span-2">
+            <label for="site">Site <span class="req" aria-hidden="true">*</span></label>
+            <input type="text" id="site" name="site" autocomplete="off" required>
+            <p class="field-error" role="alert"></p>
+          </div>
+          <div class="field">
+            <label for="fecha">Fecha <span class="req" aria-hidden="true">*</span></label>
+            <input type="date" id="fecha" name="fecha" required>
+            <p class="field-error" role="alert"></p>
+          </div>
+          <div class="field">
+            <label for="alto-riesgo">Trabajo de alto riesgo <span class="req" aria-hidden="true">*</span></label>
+            <select id="alto-riesgo" name="altoRiesgo" required>
+              <option value="">Elige una opción...</option>
+              <option value="si">Sí</option>
+              <option value="no">No</option>
+            </select>
+            <p class="field-error" role="alert"></p>
+          </div>
+        </div>
+      </section>
+
+      <section class="form-section" id="sec-docs" aria-labelledby="sec-docs-titulo" hidden>
+        <h2 id="sec-docs-titulo">Documentos a anexar</h2>
+        <p class="muted small docs-ayuda">Formato PDF o imagen (JPG, PNG, WEBP). Máximo 10 MB por archivo.</p>
+        <div class="form-grid" id="docs-lista"></div>
+      </section>
+
+      <div class="form-actions">
+        <p class="form-status" id="form-status" role="status" aria-live="polite"></p>
+        <button type="reset" class="btn-ghost">Limpiar</button>
+        <button type="submit" class="btn-primary">Guardar documentos</button>
+      </div>
+    </form>
   </main>
 
   <footer class="footer">
@@ -50,5 +94,6 @@
   </footer>
 
   <script src="js/common.js"></script>
+  <script src="js/campo.js"></script>
 </body>
 </html>
