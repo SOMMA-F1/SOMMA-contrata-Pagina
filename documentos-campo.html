@@ -93,6 +93,31 @@
         <button type="submit" class="btn-primary">Guardar documentos</button>
       </div>
     </form>
+
+    <section class="card listado registros" aria-labelledby="registros-titulo">
+      <div class="registros-head">
+        <div>
+          <h2 id="registros-titulo">Documentos de Campo Registrados</h2>
+          <p class="muted small" id="registros-sub"></p>
+        </div>
+        <button type="button" class="btn-ghost" id="btn-recargar">Actualizar</button>
+      </div>
+      <div class="table-wrap">
+        <table class="tabla-listado">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th class="col-contrata" hidden>Contrata</th>
+              <th>Actividad</th>
+              <th>Site</th>
+              <th>Alto riesgo</th>
+              <th>Documentos</th>
+            </tr>
+          </thead>
+          <tbody id="registros-body"></tbody>
+        </table>
+      </div>
+    </section>
   </main>
 
   <footer class="footer">

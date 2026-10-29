@@ -90,5 +90,41 @@ async function supabase(ruta, opciones = {}) {
     error.code = cuerpo.code;
     throw error;
   }
-  return res.status === 204 ? null : res.json();
+  // Con "return=minimal" la respuesta viene vacía (201/204): no hay JSON que leer.
+  const texto = await res.text();
+  return texto ? JSON.parse(texto) : null;
+}
+
+// ---------- Storage (archivos) ----------
+async function subirArchivo(bucket, ruta, archivo) {
+  const res = await fetch(`${SUPABASE_URL}/storage/v1/object/${bucket}/${ruta}`, {
+    method: 'POST',
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${await tokenVigente()}`,
+      'Content-Type': archivo.type,
+      'x-upsert': 'false',
+    },
+    body: archivo,
+  });
+  if (!res.ok) {
+    const cuerpo = await res.json().catch(() => ({}));
+    throw new Error(cuerpo.message || `Error ${res.status}`);
+  }
+}
+
+// Enlace temporal (5 minutos) para abrir un archivo privado.
+async function urlFirmada(bucket, ruta) {
+  const res = await fetch(`${SUPABASE_URL}/storage/v1/object/sign/${bucket}/${ruta}`, {
+    method: 'POST',
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${await tokenVigente()}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ expiresIn: 300 }),
+  });
+  if (!res.ok) throw new Error(`Error ${res.status}`);
+  const { signedURL } = await res.json();
+  return `${SUPABASE_URL}/storage/v1${signedURL}`;
 }

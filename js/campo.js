@@ -5,6 +5,7 @@ const altoRiesgo = document.getElementById('alto-riesgo');
 const seccionDocs = document.getElementById('sec-docs');
 const listaDocs = document.getElementById('docs-lista');
 
+const BUCKET = 'documentos-campo';
 const MAX_MB = 10;
 const TIPOS = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
 
@@ -91,7 +92,7 @@ altoRiesgo.addEventListener('change', () => {
   status.textContent = '';
 });
 
-form.addEventListener('submit', (e) => {
+form.addEventListener('submit', async (e) => {
   e.preventDefault();
   status.className = 'form-status';
 
@@ -104,9 +105,46 @@ form.addEventListener('submit', (e) => {
     return;
   }
 
-  // Pendiente: guardar los archivos y los datos en Supabase.
-  status.textContent = 'Datos válidos. El guardado se activará cuando se conecte el almacenamiento de archivos.';
-  status.classList.add('ok');
+  const boton = form.querySelector('button[type="submit"]');
+  boton.disabled = true;
+  status.textContent = 'Guardando...';
+
+  try {
+    // Los archivos van a la carpeta del usuario: <usuario>/<registro>/<tipo>-<nombre>.
+    const registroId = crypto.randomUUID();
+    const archivos = [];
+    for (const input of listaDocs.querySelectorAll('input[type="file"]')) {
+      const archivo = input.files[0];
+      const doc = [...DOCS_BASE, ...DOCS_ALTO_RIESGO].find((d) => `doc-${d.id}` === input.id);
+      const limpio = archivo.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const ruta = `${sesion.user_id}/${registroId}/${doc.id}-${limpio}`;
+      await subirArchivo(BUCKET, ruta, archivo);
+      archivos.push({ tipo: doc.id, texto: doc.texto, nombre: archivo.name, ruta });
+    }
+
+    await supabase('documentos_campo', {
+      method: 'POST',
+      headers: { Prefer: 'return=minimal' },
+      body: JSON.stringify({
+        id: registroId,
+        actividad: document.getElementById('actividad').value.trim(),
+        site: document.getElementById('site').value.trim(),
+        fecha: fecha.value,
+        alto_riesgo: altoRiesgo.value === 'si',
+        archivos,
+      }),
+    });
+
+    form.reset();
+    status.className = 'form-status ok';
+    status.textContent = 'Documentos guardados correctamente.';
+    cargarRegistros();
+  } catch (err) {
+    status.className = 'form-status error';
+    status.textContent = 'No se pudo guardar. Inténtalo de nuevo.';
+  } finally {
+    boton.disabled = false;
+  }
 });
 
 form.addEventListener('reset', () => {
@@ -121,3 +159,81 @@ form.addEventListener('reset', () => {
     });
   });
 });
+
+// ---------- Registros guardados ----------
+// La base ya filtra: la contrata recibe solo los suyos y el administrador recibe todos.
+const esAdmin = sesion && sesion.rol === 'admin';
+const cuerpoRegistros = document.getElementById('registros-body');
+const subRegistros = document.getElementById('registros-sub');
+document.querySelector('.col-contrata').hidden = !esAdmin;
+
+function fechaLegible(iso) {
+  const [a, m, d] = iso.split('-');
+  return `${d}/${m}/${a}`;
+}
+
+async function abrirArchivo(boton, ruta) {
+  boton.disabled = true;
+  try {
+    window.open(await urlFirmada(BUCKET, ruta), '_blank', 'noopener');
+  } catch {
+    boton.title = 'No se pudo abrir el archivo';
+  } finally {
+    boton.disabled = false;
+  }
+}
+
+function filaVacia(texto) {
+  const tr = document.createElement('tr');
+  tr.className = 'empty-row';
+  const td = document.createElement('td');
+  td.colSpan = esAdmin ? 6 : 5;
+  td.textContent = texto;
+  tr.appendChild(td);
+  cuerpoRegistros.replaceChildren(tr);
+}
+
+async function cargarRegistros() {
+  try {
+    const filas = await supabase('documentos_campo?select=*,perfiles(nombre)&order=creado_en.desc&limit=200');
+    subRegistros.textContent = esAdmin
+      ? `Todos los registros de las contratas (${filas.length}).`
+      : `Tus registros (${filas.length}).`;
+    if (filas.length === 0) { filaVacia('Aún no hay documentos registrados.'); return; }
+
+    cuerpoRegistros.replaceChildren(...filas.map((f) => {
+      const tr = document.createElement('tr');
+      const celda = (texto) => { const td = document.createElement('td'); td.textContent = texto; tr.appendChild(td); return td; };
+      celda(fechaLegible(f.fecha));
+      if (esAdmin) celda(f.perfiles ? f.perfiles.nombre : '-');
+      celda(f.actividad);
+      celda(f.site);
+      const tdRiesgo = document.createElement('td');
+      const marca = document.createElement('span');
+      marca.className = 'estado ' + (f.alto_riesgo ? 'no' : 'ok');
+      marca.textContent = f.alto_riesgo ? 'Sí' : 'No';
+      tdRiesgo.appendChild(marca);
+      tr.appendChild(tdRiesgo);
+
+      const tdDocs = document.createElement('td');
+      tdDocs.className = 'docs-chips';
+      f.archivos.forEach((a) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'chip-doc';
+        b.textContent = a.texto;
+        b.title = a.nombre;
+        b.addEventListener('click', () => abrirArchivo(b, a.ruta));
+        tdDocs.appendChild(b);
+      });
+      tr.appendChild(tdDocs);
+      return tr;
+    }));
+  } catch {
+    subRegistros.textContent = '';
+    filaVacia('No se pudieron cargar los registros.');
+  }
+}
+
+document.getElementById('btn-recargar').addEventListener('click', cargarRegistros);
+cargarRegistros();
