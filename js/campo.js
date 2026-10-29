@@ -29,6 +29,12 @@ function hoy() {
 }
 fecha.value = hoy();
 
+// La contrata sale de la sesión iniciada y no se puede editar.
+const contrata = document.getElementById('contrata');
+const sesion = leerSesion();
+contrata.defaultValue = sesion ? (sesion.nombre || sesion.usuario) : '';
+contrata.value = contrata.defaultValue;
+
 function crearCampoArchivo(doc) {
   const caja = document.createElement('div');
   caja.className = 'field span-2';

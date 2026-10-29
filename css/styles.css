@@ -496,3 +496,5 @@ td.due.warn { color: var(--warn-text); }
   .login-main { padding: 1.5rem 1rem 2.5rem; }
   .login-card { padding: 1.75rem 1.4rem; }
 }
+.field input[readonly] { background: var(--f1-cream); color: var(--f1-stone); font-weight: 600; cursor: default; }
+.field input[readonly]:focus { outline: none; border-color: var(--f1-border); }
