@@ -511,3 +511,4 @@ td.due.warn { color: var(--warn-text); }
 }
 .chip-doc:hover { background: var(--f1-orange); border-color: var(--f1-orange); color: #fff; }
 .chip-doc:disabled { opacity: 0.6; cursor: wait; }
+.estado.pend { background: #fef3c7; color: #b45309; }

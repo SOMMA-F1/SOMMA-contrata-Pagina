@@ -190,11 +190,13 @@ function filaVacia(texto) {
   const tr = document.createElement('tr');
   tr.className = 'empty-row';
   const td = document.createElement('td');
-  td.colSpan = esAdmin ? 6 : 5;
+  td.colSpan = esAdmin ? 7 : 6;
   td.textContent = texto;
   tr.appendChild(td);
   cuerpoRegistros.replaceChildren(tr);
 }
+
+const reintentados = new Set();
 
 async function cargarRegistros() {
   try {
@@ -203,6 +205,13 @@ async function cargarRegistros() {
       ? `Todos los registros de las contratas (${filas.length}).`
       : `Tus registros (${filas.length}).`;
     if (filas.length === 0) { filaVacia('Aún no hay documentos registrados.'); return; }
+
+    // Si una llamada a SharePoint se perdió (p. ej. se cerró la pestaña), se reintenta al cargar la lista.
+    filas.filter((f) => f.sharepoint_estado === 'pendiente' && !reintentados.has(f.id)).forEach((f) => {
+      reintentados.add(f.id);
+      enviarASharePoint(f.id);
+    });
+    if (filas.some((f) => f.sharepoint_estado === 'pendiente')) setTimeout(cargarRegistros, 8000);
 
     cuerpoRegistros.replaceChildren(...filas.map((f) => {
       const tr = document.createElement('tr');
@@ -230,6 +239,28 @@ async function cargarRegistros() {
         tdDocs.appendChild(b);
       });
       tr.appendChild(tdDocs);
+
+      const tdSp = document.createElement('td');
+      const estadoSp = document.createElement('span');
+      const textos = { enviado: ['ok', 'Enviado'], pendiente: ['pend', 'Enviando…'], error: ['no', 'Error'] };
+      const [clase, texto] = textos[f.sharepoint_estado] || textos.pendiente;
+      estadoSp.className = 'estado ' + clase;
+      estadoSp.textContent = texto;
+      if (f.sharepoint_detalle) estadoSp.title = f.sharepoint_detalle;
+      tdSp.appendChild(estadoSp);
+      if (f.sharepoint_estado === 'error') {
+        const reintentar = document.createElement('button');
+        reintentar.type = 'button';
+        reintentar.className = 'chip-doc';
+        reintentar.textContent = 'Reintentar';
+        reintentar.addEventListener('click', async () => {
+          reintentar.disabled = true;
+          await enviarASharePoint(f.id);
+          setTimeout(cargarRegistros, 6000);
+        });
+        tdSp.append(' ', reintentar);
+      }
+      tr.appendChild(tdSp);
       return tr;
     }));
   } catch {
