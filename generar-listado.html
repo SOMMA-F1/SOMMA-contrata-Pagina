@@ -125,6 +125,85 @@
     <p>&copy; <span id="year"></span> F1 Services &amp; Solutions · SOMMA</p>
   </footer>
 
+
+  <dialog class="modal" id="dlg-editar" aria-labelledby="dlg-editar-titulo">
+    <form id="form-editar" novalidate>
+      <h2 id="dlg-editar-titulo">Editar trabajador</h2>
+      <div class="form-grid modal-grid">
+          <div class="field">
+            <label for="e-ap-paterno">Apellido paterno <span class="req" aria-hidden="true">*</span></label>
+            <input type="text" id="e-ap-paterno" autocomplete="off" required>
+            <p class="field-error" role="alert"></p>
+          </div>
+          <div class="field">
+            <label for="e-ap-materno">Apellido materno <span class="req" aria-hidden="true">*</span></label>
+            <input type="text" id="e-ap-materno" autocomplete="off" required>
+            <p class="field-error" role="alert"></p>
+          </div>
+          <div class="field">
+            <label for="e-nombres">Nombres <span class="req" aria-hidden="true">*</span></label>
+            <input type="text" id="e-nombres" autocomplete="off" required>
+            <p class="field-error" role="alert"></p>
+          </div>
+          <div class="field">
+            <label for="e-dni">DNI <span class="req" aria-hidden="true">*</span></label>
+            <input type="text" id="e-dni" inputmode="numeric" maxlength="8" autocomplete="off" required>
+            <p class="field-error" role="alert"></p>
+          </div>
+          <div class="field">
+            <label for="e-nacimiento">Fecha de nacimiento <span class="req" aria-hidden="true">*</span></label>
+            <input type="date" id="e-nacimiento" autocomplete="off" required>
+            <p class="field-error" role="alert"></p>
+          </div>
+          <div class="field">
+            <label for="e-sexo">Sexo <span class="req" aria-hidden="true">*</span></label>
+            <select id="e-sexo" required><option value="">Elige una opción...</option><option value="Masculino">Masculino</option><option value="Femenino">Femenino</option></select>
+            <p class="field-error" role="alert"></p>
+          </div>
+          <div class="field">
+            <label for="e-nacionalidad">Nacionalidad <span class="req" aria-hidden="true">*</span></label>
+            <input type="text" id="e-nacionalidad" autocomplete="off" required>
+            <p class="field-error" role="alert"></p>
+          </div>
+          <div class="field">
+            <label for="e-direccion">Dirección personal <span class="req" aria-hidden="true">*</span></label>
+            <input type="text" id="e-direccion" autocomplete="off" required>
+            <p class="field-error" role="alert"></p>
+          </div>
+          <div class="field">
+            <label for="e-empresa">Empresa que labora <span class="req" aria-hidden="true">*</span></label>
+            <input type="text" id="e-empresa" autocomplete="off" required>
+            <p class="field-error" role="alert"></p>
+          </div>
+      </div>
+      <div class="form-actions">
+        <p class="form-status" id="editar-status" role="alert"></p>
+        <button type="button" class="btn-ghost" id="editar-cancelar">Cancelar</button>
+        <button type="submit" class="btn-primary">Guardar cambios</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="modal modal-chico" id="dlg-estado" aria-labelledby="dlg-estado-titulo">
+    <form id="form-estado">
+      <h2 id="dlg-estado-titulo">Estado de acreditación</h2>
+      <p class="estado-nombre" id="estado-nombre"></p>
+      <div class="field">
+        <label for="estado-select">Estado</label>
+        <select id="estado-select">
+          <option value="No acreditado">No acreditado</option>
+          <option value="Acreditado">Acreditado</option>
+        </select>
+      </div>
+      <p class="muted small" id="estado-nota"></p>
+      <div class="form-actions">
+        <p class="form-status" id="estado-status" role="alert"></p>
+        <button type="button" class="btn-ghost" id="estado-cerrar">Cerrar</button>
+        <button type="submit" class="btn-primary" id="estado-guardar">Guardar</button>
+      </div>
+    </form>
+  </dialog>
+
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="js/common.js"></script>

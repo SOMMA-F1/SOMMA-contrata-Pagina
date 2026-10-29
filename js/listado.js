@@ -40,7 +40,7 @@ function celda(tr, texto, clase) {
 }
 
 // ---------- Menú de acciones por trabajador ----------
-// Las páginas de destino aún no existen: por ahora cada acción muestra un aviso.
+// Editar, Estado de acreditación y Eliminar ya funcionan; Ver documentos aún muestra un aviso.
 const ACCIONES = [
   {
     id: 'editar',
@@ -56,6 +56,12 @@ const ACCIONES = [
     id: 'acreditacion',
     texto: 'Estado de acreditación',
     icono: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 10h4M7 14h6M15 10h2"/>',
+  },
+  {
+    id: 'eliminar',
+    texto: 'Eliminar',
+    peligro: true,
+    icono: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/>',
   },
 ];
 
@@ -105,14 +111,18 @@ function abrirMenu(boton, trabajador) {
   ACCIONES.forEach((a) => {
     const item = document.createElement('button');
     item.type = 'button';
-    item.className = 'menu-item';
+    item.className = 'menu-item' + (a.peligro ? ' peligro' : '');
     item.setAttribute('role', 'menuitem');
     item.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${a.icono}</svg>`;
     item.append(a.texto);
     item.addEventListener('click', () => {
-      const nombre = menuTrabajador ? menuTrabajador.nombre : '';
+      const t = menuTrabajador;
       cerrarMenu(true);
-      mostrarAviso(`${a.texto}: ${nombre}. Esta opción estará disponible próximamente.`);
+      if (!t) return;
+      if (a.id === 'editar') abrirEditar(t);
+      else if (a.id === 'acreditacion') abrirEstado(t);
+      else if (a.id === 'eliminar') eliminarTrabajador(t);
+      else mostrarAviso(`${a.texto}: ${t.nombre}. Esta opción estará disponible próximamente.`);
     });
     menu.appendChild(item);
   });
@@ -274,6 +284,7 @@ async function cargarTrabajadores() {
       venc: null,
       dias: null,
       estado: f.estado,
+      fila: f,
     })));
     pintar();
   } catch (err) {
@@ -282,3 +293,176 @@ async function cargarTrabajadores() {
 }
 
 cargarTrabajadores();
+
+// ---------- Editar, estado de acreditación y eliminar ----------
+const sesionActual = leerSesion();
+const esAdmin = !!sesionActual && sesionActual.rol === 'admin';
+
+function nombreCompleto(f) {
+  return `${f.apellido_paterno} ${f.apellido_materno}, ${f.nombres}`;
+}
+
+function aTrabajador(f) {
+  return {
+    id: f.id,
+    nombre: nombreCompleto(f),
+    rut: f.dni,
+    cargo: '-',
+    venc: null,
+    dias: null,
+    estado: f.estado,
+    fila: f,
+  };
+}
+
+function reemplazarTrabajador(f) {
+  const i = trabajadores.findIndex((t) => t.id === f.id);
+  if (i >= 0) trabajadores[i] = aTrabajador(f);
+  pintar();
+}
+
+// --- Editar ---
+const dlgEditar = $('dlg-editar');
+const formEditar = $('form-editar');
+const camposEditar = {
+  apellido_paterno: $('e-ap-paterno'),
+  apellido_materno: $('e-ap-materno'),
+  nombres: $('e-nombres'),
+  dni: $('e-dni'),
+  fecha_nacimiento: $('e-nacimiento'),
+  sexo: $('e-sexo'),
+  nacionalidad: $('e-nacionalidad'),
+  direccion_personal: $('e-direccion'),
+  empresa: $('e-empresa'),
+};
+let editando = null;
+
+camposEditar.fecha_nacimiento.max = new Date().toISOString().slice(0, 10);
+camposEditar.dni.addEventListener('input', (e) => { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 8); });
+
+function errorCampo(clave, campo) {
+  const v = campo.value.trim();
+  if (!v) return 'Este campo es obligatorio.';
+  if (clave === 'dni' && !/^\d{8}$/.test(v)) return 'El DNI debe tener 8 dígitos.';
+  if (clave === 'fecha_nacimiento' && v > campo.max) return 'La fecha no puede ser futura.';
+  return '';
+}
+
+function marcarCampo(campo, texto) {
+  const caja = campo.closest('.field');
+  caja.classList.toggle('invalid', texto !== '');
+  caja.querySelector('.field-error').textContent = texto;
+}
+
+function abrirEditar(t) {
+  editando = t;
+  Object.entries(camposEditar).forEach(([clave, campo]) => {
+    campo.value = t.fila[clave] ?? '';
+    marcarCampo(campo, '');
+  });
+  $('editar-status').textContent = '';
+  $('editar-status').className = 'form-status';
+  dlgEditar.showModal();
+}
+
+formEditar.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const status = $('editar-status');
+  status.className = 'form-status';
+
+  let primero = null;
+  Object.entries(camposEditar).forEach(([clave, campo]) => {
+    const texto = errorCampo(clave, campo);
+    marcarCampo(campo, texto);
+    if (texto && !primero) primero = campo;
+  });
+  if (primero) { status.textContent = 'Revisa los campos marcados.'; status.classList.add('error'); primero.focus(); return; }
+
+  const cambios = {};
+  Object.entries(camposEditar).forEach(([clave, campo]) => { cambios[clave] = campo.value.trim(); });
+
+  const boton = formEditar.querySelector('button[type="submit"]');
+  boton.disabled = true;
+  status.textContent = 'Guardando...';
+  try {
+    const [fila] = await supabase(`trabajadores?id=eq.${editando.id}`, {
+      method: 'PATCH',
+      headers: { Prefer: 'return=representation' },
+      body: JSON.stringify(cambios),
+    });
+    if (!fila) throw new Error('sin permiso');
+    reemplazarTrabajador(fila);
+    dlgEditar.close();
+    mostrarAviso('Trabajador actualizado.');
+  } catch (err) {
+    status.className = 'form-status error';
+    status.textContent = err.code === '23505' ? 'Ya existe otro trabajador con ese DNI.' : 'No se pudo guardar. Inténtalo de nuevo.';
+  } finally {
+    boton.disabled = false;
+  }
+});
+
+$('editar-cancelar').addEventListener('click', () => dlgEditar.close());
+
+// --- Estado de acreditación ---
+const dlgEstado = $('dlg-estado');
+let estadoDe = null;
+
+function abrirEstado(t) {
+  estadoDe = t;
+  $('estado-nombre').textContent = t.nombre;
+  $('estado-select').value = t.estado;
+  $('estado-select').disabled = !esAdmin;
+  $('estado-nota').textContent = esAdmin
+    ? 'Como administrador puedes cambiar el estado de acreditación.'
+    : 'Solo el administrador puede cambiar el estado de acreditación.';
+  $('estado-guardar').hidden = !esAdmin;
+  $('estado-status').textContent = '';
+  dlgEstado.showModal();
+}
+
+$('form-estado').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (!esAdmin || !estadoDe) return;
+  const status = $('estado-status');
+  const boton = $('estado-guardar');
+  boton.disabled = true;
+  status.className = 'form-status';
+  status.textContent = 'Guardando...';
+  try {
+    const [fila] = await supabase(`trabajadores?id=eq.${estadoDe.id}`, {
+      method: 'PATCH',
+      headers: { Prefer: 'return=representation' },
+      body: JSON.stringify({ estado: $('estado-select').value }),
+    });
+    if (!fila) throw new Error('sin permiso');
+    reemplazarTrabajador(fila);
+    dlgEstado.close();
+    mostrarAviso(`Estado actualizado: ${fila.estado}.`);
+  } catch {
+    status.className = 'form-status error';
+    status.textContent = 'No se pudo guardar. Inténtalo de nuevo.';
+  } finally {
+    boton.disabled = false;
+  }
+});
+
+$('estado-cerrar').addEventListener('click', () => dlgEstado.close());
+
+// --- Eliminar ---
+async function eliminarTrabajador(t) {
+  if (!confirm(`¿Eliminar a ${t.nombre} (DNI ${t.rut})?\n\nEsta acción no se puede deshacer.`)) return;
+  try {
+    const borrados = await supabase(`trabajadores?id=eq.${t.id}`, {
+      method: 'DELETE',
+      headers: { Prefer: 'return=representation' },
+    });
+    if (!borrados || borrados.length === 0) throw new Error('sin permiso');
+    const i = trabajadores.findIndex((x) => x.id === t.id);
+    if (i >= 0) trabajadores.splice(i, 1);
+    pintar();
+    mostrarAviso('Trabajador eliminado.');
+  } catch {
+    mostrarAviso('No se pudo eliminar al trabajador.');
+  }
+}

@@ -518,3 +518,15 @@ td.due.warn { color: var(--warn-text); }
 }
 .btn-eliminar:hover { background: var(--bad); color: #fff; }
 .btn-eliminar:disabled { opacity: 0.6; cursor: wait; }
+
+/* Ventanas de editar trabajador y estado de acreditación */
+.modal { width: min(46rem, calc(100vw - 2rem)); max-height: calc(100vh - 2rem); overflow: auto; padding: 1.5rem; border: 0; border-radius: 12px; box-shadow: 0 20px 60px rgba(37, 35, 33, 0.3); color: var(--f1-ink); }
+.modal::backdrop { background: rgba(37, 35, 33, 0.55); }
+.modal h2 { margin: 0 0 1rem; font-size: 1.1rem; }
+.modal-chico { width: min(24rem, calc(100vw - 2rem)); }
+.modal-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 1rem; }
+.estado-nombre { margin: -0.4rem 0 1rem; font-weight: 700; }
+.modal .field select { width: 100%; padding: 0.6rem 0.7rem; border: 1px solid var(--f1-border); border-radius: 6px; background: #fff; font: inherit; font-size: 0.88rem; }
+.menu-item.peligro { color: var(--bad-text); }
+.menu-item.peligro:hover { background: var(--bad-bg); }
+@media (max-width: 640px) { .modal-grid { grid-template-columns: minmax(0, 1fr); } }
