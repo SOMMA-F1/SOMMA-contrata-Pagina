@@ -485,6 +485,36 @@ const DOCS_TRABAJADOR = [
 ];
 const TOTAL_DOCS = 5;
 
+// Fechas que se registran por documento: SCTR inicio y fin; CAMO y cursos solo inicio; DNI solo caducidad.
+const CAMPOS_FECHA = {
+  sctr: [{ clave: 'fecha_inicio', texto: 'Inicio' }, { clave: 'fecha_fin', texto: 'Fin' }],
+  camo: [{ clave: 'fecha_inicio', texto: 'Fecha de inicio' }],
+  curso_altura: [{ clave: 'fecha_inicio', texto: 'Fecha de inicio' }],
+  curso_riesgo_electrico: [{ clave: 'fecha_inicio', texto: 'Fecha de inicio' }],
+  dni: [{ clave: 'fecha_fin', texto: 'Fecha de caducidad' }],
+};
+
+function leerFechas(entradas) {
+  return {
+    fecha_inicio: entradas.fecha_inicio ? entradas.fecha_inicio.value || null : null,
+    fecha_fin: entradas.fecha_fin ? entradas.fecha_fin.value || null : null,
+  };
+}
+
+function errorFechas(doc, entradas) {
+  const f = leerFechas(entradas);
+  for (const c of CAMPOS_FECHA[doc.tipo]) {
+    if (!f[c.clave]) return `Indica la fecha en ${doc.texto}: ${c.texto.toLowerCase()}.`;
+  }
+  if (f.fecha_inicio && f.fecha_fin && f.fecha_fin < f.fecha_inicio) return `En ${doc.texto} la fecha de fin no puede ser anterior al inicio.`;
+  return '';
+}
+
+function formatoFecha(iso) {
+  const [a, m, d] = iso.split('-');
+  return `${d}/${m}/${a}`;
+}
+
 const dlgDocs = $('dlg-docs');
 let docsDe = null;
 let docsGuardados = new Map();
@@ -519,6 +549,23 @@ function crearFilaDoc(doc) {
     info.appendChild(sp);
   }
 
+  // Fechas del documento (obligatorias para subirlo).
+  const bloqueFechas = document.createElement('div');
+  bloqueFechas.className = 'doc-fechas';
+  const entradas = {};
+  CAMPOS_FECHA[doc.tipo].forEach((c) => {
+    const etiqueta = document.createElement('label');
+    etiqueta.className = 'doc-fecha';
+    const texto = document.createElement('span');
+    texto.textContent = c.texto;
+    const campo = document.createElement('input');
+    campo.type = 'date';
+    campo.value = (guardado && guardado[c.clave]) || '';
+    entradas[c.clave] = campo;
+    etiqueta.append(texto, campo);
+    bloqueFechas.appendChild(etiqueta);
+  });
+
   const acciones = document.createElement('div');
   acciones.className = 'doc-acciones';
 
@@ -526,14 +573,39 @@ function crearFilaDoc(doc) {
   input.type = 'file';
   input.accept = '.pdf,image/jpeg,image/png,image/webp';
   input.hidden = true;
-  input.addEventListener('change', () => { if (input.files[0]) subirDocumento(doc, input.files[0], acciones); });
+  input.addEventListener('change', () => { if (input.files[0]) subirDocumento(doc, input.files[0], acciones, leerFechas(entradas)); });
 
   const subir = document.createElement('button');
   subir.type = 'button';
   subir.className = 'chip-doc';
   subir.textContent = guardado ? 'Reemplazar' : 'Subir';
-  subir.addEventListener('click', () => input.click());
+  subir.addEventListener('click', () => {
+    const error = errorFechas(doc, entradas);
+    if (error) { mensajeDocs(error, 'error'); return; }
+    mensajeDocs('');
+    input.click();
+  });
   acciones.append(input, subir);
+
+  if (guardado) {
+    // Cambiar solo las fechas de un documento ya subido.
+    const guardarFechas = document.createElement('button');
+    guardarFechas.type = 'button';
+    guardarFechas.className = 'chip-doc';
+    guardarFechas.textContent = 'Guardar fechas';
+    guardarFechas.disabled = true;
+    const hayCambios = () => Object.keys(entradas).some((k) => (entradas[k].value || null) !== (guardado[k] || null));
+    Object.values(entradas).forEach((campo) => campo.addEventListener('input', () => { guardarFechas.disabled = !hayCambios(); }));
+    guardarFechas.addEventListener('click', () => guardarFechasDocumento(doc, guardado, entradas, acciones));
+    acciones.append(guardarFechas);
+    // Documento subido antes de existir las fechas: se avisa que faltan.
+    if (errorFechas(doc, entradas)) {
+      const aviso = document.createElement('span');
+      aviso.className = 'doc-estado';
+      aviso.textContent = 'Faltan las fechas: complétalas y pulsa "Guardar fechas".';
+      info.appendChild(aviso);
+    }
+  }
 
   if (guardado) {
     const ver = document.createElement('button');
@@ -566,7 +638,7 @@ function crearFilaDoc(doc) {
     }
   }
 
-  fila.append(info, acciones);
+  fila.append(info, bloqueFechas, acciones);
   return fila;
 }
 
@@ -620,7 +692,7 @@ function ocupar(acciones, ocupado) {
   acciones.querySelectorAll('button').forEach((b) => { b.disabled = ocupado; });
 }
 
-async function subirDocumento(doc, archivo, acciones) {
+async function subirDocumento(doc, archivo, acciones, fechas) {
   mensajeDocs('');
   if (!TIPOS_ARCHIVO.includes(archivo.type)) { mensajeDocs('Solo se permite PDF o imagen (JPG, PNG, WEBP).', 'error'); return; }
   if (archivo.size > MAX_MB_DOC * 1024 * 1024) { mensajeDocs(`El archivo supera los ${MAX_MB_DOC} MB.`, 'error'); return; }
@@ -642,6 +714,7 @@ async function subirDocumento(doc, archivo, acciones) {
       headers: { Prefer: 'resolution=merge-duplicates,return=representation' },
       body: JSON.stringify({
         trabajador_id: docsDe.id, tipo: doc.tipo, nombre: archivo.name, ruta,
+        fecha_inicio: fechas.fecha_inicio, fecha_fin: fechas.fecha_fin,
         subido_en: new Date().toISOString(), sharepoint_estado: 'pendiente', sharepoint_detalle: null, sharepoint_enviado_en: null,
       }),
     });
@@ -652,6 +725,24 @@ async function subirDocumento(doc, archivo, acciones) {
     mensajeDocs(`${doc.texto} guardado.`, 'ok');
   } catch {
     mensajeDocs('No se pudo subir el archivo. Inténtalo de nuevo.', 'error');
+    ocupar(acciones, false);
+  }
+}
+
+async function guardarFechasDocumento(doc, guardado, entradas, acciones) {
+  const error = errorFechas(doc, entradas);
+  if (error) { mensajeDocs(error, 'error'); return; }
+  ocupar(acciones, true);
+  try {
+    await supabase(`trabajador_documentos?id=eq.${guardado.id}`, {
+      method: 'PATCH',
+      headers: { Prefer: 'return=minimal' },
+      body: JSON.stringify(leerFechas(entradas)),
+    });
+    await cargarDocumentos();
+    mensajeDocs(`Fechas de ${doc.texto} guardadas.`, 'ok');
+  } catch {
+    mensajeDocs('No se pudieron guardar las fechas.', 'error');
     ocupar(acciones, false);
   }
 }

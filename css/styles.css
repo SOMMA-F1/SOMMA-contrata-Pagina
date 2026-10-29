@@ -549,3 +549,7 @@ td.due.warn { color: var(--warn-text); }
 .resumen-contratas { margin-top: 1.5rem; padding: 1.25rem 1.5rem; }
 .resumen-contratas h2 { margin: 0 0 0.2rem; font-size: 1.05rem; }
 .resumen-contratas .muted { margin: 0 0 0.9rem; }
+.doc-fechas { display: flex; flex-wrap: wrap; gap: 0.5rem 0.75rem; }
+.doc-fecha { display: grid; gap: 0.15rem; font-size: 0.7rem; font-weight: 700; color: var(--f1-stone); }
+.doc-fecha input { padding: 0.3rem 0.45rem; border: 1px solid var(--f1-border); border-radius: 6px; background: #fff; color: var(--f1-ink); font: inherit; font-size: 0.8rem; }
+.doc-fecha input:focus { outline: 2px solid var(--f1-orange); outline-offset: 0; border-color: transparent; }
