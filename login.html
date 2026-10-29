@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SOMMA | Iniciar sesión</title>
+  <meta name="description" content="Acceso al sistema de acreditación de contratistas de F1 Services & Solutions.">
+  <link rel="icon" href="assets/logo.png" type="image/png">
+  <link rel="stylesheet" href="css/styles.css">
+  <script src="js/supabase.js"></script>
+  <script>if (leerSesion()) location.replace('index.html');</script>
+</head>
+<body class="login-body">
+  <main class="login-main">
+    <form class="card login-card" id="form-login" novalidate>
+      <img src="assets/logo.png" alt="F1+ SOMMA" width="72" height="72">
+      <h1>SOMMA</h1>
+      <p class="muted small">Acreditación de contratistas</p>
+
+      <div class="field">
+        <label for="usuario">Usuario</label>
+        <input type="text" id="usuario" name="usuario" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+      </div>
+      <div class="field">
+        <label for="clave">Contraseña</label>
+        <input type="password" id="clave" name="clave" autocomplete="current-password" required>
+      </div>
+
+      <p class="form-status" id="login-status" role="alert"></p>
+      <button type="submit" class="btn-primary" id="btn-login">Ingresar</button>
+    </form>
+  </main>
+
+  <script src="js/login.js"></script>
+</body>
+</html>
