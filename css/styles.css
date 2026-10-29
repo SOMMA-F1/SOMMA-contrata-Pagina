@@ -530,3 +530,17 @@ td.due.warn { color: var(--warn-text); }
 .menu-item.peligro { color: var(--bad-text); }
 .menu-item.peligro:hover { background: var(--bad-bg); }
 @media (max-width: 640px) { .modal-grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* Documentos del trabajador */
+.docs-contador { margin: -0.5rem 0 0.8rem; }
+.docs-lista { display: grid; gap: 0.5rem; margin-bottom: 0.8rem; }
+.doc-fila { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.6rem; padding: 0.65rem 0.8rem; border: 1px solid var(--f1-border); border-radius: 8px; background: var(--f1-cream); }
+.doc-info { display: grid; gap: 0.1rem; min-width: 0; }
+.doc-info strong { font-size: 0.9rem; }
+.doc-estado { font-size: 0.75rem; color: var(--f1-stone); overflow-wrap: anywhere; }
+.doc-estado.cargado { color: var(--ok-text); font-weight: 600; }
+.doc-acciones { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.chip-doc.quitar:hover { background: var(--bad); border-color: var(--bad); }
+.doc-grupo { display: grid; gap: 0.5rem; padding: 0.7rem 0.8rem 0.8rem; border: 1px solid var(--f1-border); border-radius: 8px; }
+.doc-grupo-titulo { margin: 0; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--f1-stone); }
+.doc-grupo .doc-fila { background: #fff; }

@@ -184,6 +184,18 @@
     </form>
   </dialog>
 
+  <dialog class="modal" id="dlg-docs" aria-labelledby="dlg-docs-titulo">
+    <h2 id="dlg-docs-titulo">Documentos del trabajador</h2>
+    <p class="estado-nombre" id="docs-nombre"></p>
+    <p class="muted small docs-contador" id="docs-contador"></p>
+    <div class="docs-lista" id="docs-lista"></div>
+    <p class="muted small">Formato PDF o imagen (JPG, PNG, WEBP). Máximo 10 MB por archivo.</p>
+    <div class="form-actions">
+      <p class="form-status" id="docs-status" role="status" aria-live="polite"></p>
+      <button type="button" class="btn-primary" id="docs-cerrar">Cerrar</button>
+    </div>
+  </dialog>
+
   <dialog class="modal modal-chico" id="dlg-estado" aria-labelledby="dlg-estado-titulo">
     <form id="form-estado">
       <h2 id="dlg-estado-titulo">Estado de acreditación</h2>

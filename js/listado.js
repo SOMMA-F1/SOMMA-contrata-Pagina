@@ -40,7 +40,7 @@ function celda(tr, texto, clase) {
 }
 
 // ---------- Menú de acciones por trabajador ----------
-// Editar, Estado de acreditación y Eliminar ya funcionan; Ver documentos aún muestra un aviso.
+// Cada acción abre su ventana (editar, documentos, estado) o actúa directo (eliminar).
 const ACCIONES = [
   {
     id: 'editar',
@@ -121,8 +121,8 @@ function abrirMenu(boton, trabajador) {
       if (!t) return;
       if (a.id === 'editar') abrirEditar(t);
       else if (a.id === 'acreditacion') abrirEstado(t);
+      else if (a.id === 'documentos') abrirDocumentos(t);
       else if (a.id === 'eliminar') eliminarTrabajador(t);
-      else mostrarAviso(`${a.texto}: ${t.nombre}. Esta opción estará disponible próximamente.`);
     });
     menu.appendChild(item);
   });
@@ -453,11 +453,13 @@ $('estado-cerrar').addEventListener('click', () => dlgEstado.close());
 async function eliminarTrabajador(t) {
   if (!confirm(`¿Eliminar a ${t.nombre} (DNI ${t.rut})?\n\nEsta acción no se puede deshacer.`)) return;
   try {
+    const docs = await supabase(`trabajador_documentos?select=ruta&trabajador_id=eq.${t.id}`);
     const borrados = await supabase(`trabajadores?id=eq.${t.id}`, {
       method: 'DELETE',
       headers: { Prefer: 'return=representation' },
     });
     if (!borrados || borrados.length === 0) throw new Error('sin permiso');
+    await borrarArchivos(BUCKET_DOCS, docs.map((d) => d.ruta));
     const i = trabajadores.findIndex((x) => x.id === t.id);
     if (i >= 0) trabajadores.splice(i, 1);
     pintar();
@@ -466,3 +468,168 @@ async function eliminarTrabajador(t) {
     mostrarAviso('No se pudo eliminar al trabajador.');
   }
 }
+
+// ---------- Documentos del trabajador ----------
+const BUCKET_DOCS = 'documentos-campo';
+const TIPOS_ARCHIVO = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
+const MAX_MB_DOC = 10;
+
+const DOCS_TRABAJADOR = [
+  { tipo: 'sctr', texto: 'SCTR' },
+  { tipo: 'camo', texto: 'CAMO' },
+  { grupo: 'Certificación o cursos', items: [
+    { tipo: 'curso_altura', texto: 'Altura' },
+    { tipo: 'curso_riesgo_electrico', texto: 'Riesgo eléctrico' },
+  ] },
+  { tipo: 'dni', texto: 'DNI' },
+];
+const TOTAL_DOCS = 5;
+
+const dlgDocs = $('dlg-docs');
+let docsDe = null;
+let docsGuardados = new Map();
+
+function mensajeDocs(texto, tipo = '') {
+  const el = $('docs-status');
+  el.className = 'form-status' + (tipo ? ' ' + tipo : '');
+  el.textContent = texto;
+}
+
+function crearFilaDoc(doc) {
+  const guardado = docsGuardados.get(doc.tipo);
+  const fila = document.createElement('div');
+  fila.className = 'doc-fila';
+
+  const info = document.createElement('div');
+  info.className = 'doc-info';
+  const nombre = document.createElement('strong');
+  nombre.textContent = doc.texto;
+  const estadoDoc = document.createElement('span');
+  estadoDoc.className = 'doc-estado' + (guardado ? ' cargado' : '');
+  estadoDoc.textContent = guardado ? guardado.nombre : 'Pendiente';
+  info.append(nombre, estadoDoc);
+
+  const acciones = document.createElement('div');
+  acciones.className = 'doc-acciones';
+
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.pdf,image/jpeg,image/png,image/webp';
+  input.hidden = true;
+  input.addEventListener('change', () => { if (input.files[0]) subirDocumento(doc, input.files[0], acciones); });
+
+  const subir = document.createElement('button');
+  subir.type = 'button';
+  subir.className = 'chip-doc';
+  subir.textContent = guardado ? 'Reemplazar' : 'Subir';
+  subir.addEventListener('click', () => input.click());
+  acciones.append(input, subir);
+
+  if (guardado) {
+    const ver = document.createElement('button');
+    ver.type = 'button';
+    ver.className = 'chip-doc';
+    ver.textContent = 'Ver';
+    ver.addEventListener('click', async () => {
+      ver.disabled = true;
+      try { window.open(await urlFirmada(BUCKET_DOCS, guardado.ruta), '_blank', 'noopener'); }
+      catch { mensajeDocs('No se pudo abrir el archivo.', 'error'); }
+      finally { ver.disabled = false; }
+    });
+    const quitar = document.createElement('button');
+    quitar.type = 'button';
+    quitar.className = 'chip-doc quitar';
+    quitar.textContent = 'Quitar';
+    quitar.addEventListener('click', () => quitarDocumento(doc, guardado, acciones));
+    acciones.append(ver, quitar);
+  }
+
+  fila.append(info, acciones);
+  return fila;
+}
+
+function pintarDocumentos() {
+  const lista = $('docs-lista');
+  lista.replaceChildren();
+  DOCS_TRABAJADOR.forEach((d) => {
+    if (d.grupo) {
+      const grupo = document.createElement('div');
+      grupo.className = 'doc-grupo';
+      const titulo = document.createElement('p');
+      titulo.className = 'doc-grupo-titulo';
+      titulo.textContent = d.grupo;
+      grupo.appendChild(titulo);
+      d.items.forEach((i) => grupo.appendChild(crearFilaDoc(i)));
+      lista.appendChild(grupo);
+    } else {
+      lista.appendChild(crearFilaDoc(d));
+    }
+  });
+  $('docs-contador').textContent = `${docsGuardados.size} de ${TOTAL_DOCS} documentos cargados`;
+}
+
+async function cargarDocumentos() {
+  try {
+    const filas = await supabase(`trabajador_documentos?select=*&trabajador_id=eq.${docsDe.id}`);
+    docsGuardados = new Map(filas.map((f) => [f.tipo, f]));
+    pintarDocumentos();
+  } catch {
+    mensajeDocs('No se pudieron cargar los documentos.', 'error');
+  }
+}
+
+function abrirDocumentos(t) {
+  docsDe = t;
+  docsGuardados = new Map();
+  $('docs-nombre').textContent = t.nombre;
+  mensajeDocs('');
+  pintarDocumentos();
+  dlgDocs.showModal();
+  cargarDocumentos();
+}
+
+function ocupar(acciones, ocupado) {
+  acciones.querySelectorAll('button').forEach((b) => { b.disabled = ocupado; });
+}
+
+async function subirDocumento(doc, archivo, acciones) {
+  mensajeDocs('');
+  if (!TIPOS_ARCHIVO.includes(archivo.type)) { mensajeDocs('Solo se permite PDF o imagen (JPG, PNG, WEBP).', 'error'); return; }
+  if (archivo.size > MAX_MB_DOC * 1024 * 1024) { mensajeDocs(`El archivo supera los ${MAX_MB_DOC} MB.`, 'error'); return; }
+
+  ocupar(acciones, true);
+  mensajeDocs(`Subiendo ${doc.texto}...`);
+  try {
+    const previo = docsGuardados.get(doc.tipo);
+    const limpio = archivo.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const ruta = `${docsDe.fila.contrata_id}/trabajadores/${docsDe.id}/${doc.tipo}-${Date.now()}-${limpio}`;
+    await subirArchivo(BUCKET_DOCS, ruta, archivo);
+    await supabase('trabajador_documentos?on_conflict=trabajador_id,tipo', {
+      method: 'POST',
+      headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
+      body: JSON.stringify({ trabajador_id: docsDe.id, tipo: doc.tipo, nombre: archivo.name, ruta, subido_en: new Date().toISOString() }),
+    });
+    if (previo) await borrarArchivos(BUCKET_DOCS, [previo.ruta]);
+    await cargarDocumentos();
+    mensajeDocs(`${doc.texto} guardado.`, 'ok');
+  } catch {
+    mensajeDocs('No se pudo subir el archivo. Inténtalo de nuevo.', 'error');
+    ocupar(acciones, false);
+  }
+}
+
+async function quitarDocumento(doc, guardado, acciones) {
+  if (!confirm(`¿Quitar el documento ${doc.texto}?`)) return;
+  ocupar(acciones, true);
+  try {
+    await supabase(`trabajador_documentos?id=eq.${guardado.id}`, { method: 'DELETE' });
+    await borrarArchivos(BUCKET_DOCS, [guardado.ruta]);
+    await cargarDocumentos();
+    mensajeDocs(`${doc.texto} quitado.`, 'ok');
+  } catch {
+    mensajeDocs('No se pudo quitar el documento.', 'error');
+    ocupar(acciones, false);
+  }
+}
+
+$('docs-cerrar').addEventListener('click', () => dlgDocs.close());

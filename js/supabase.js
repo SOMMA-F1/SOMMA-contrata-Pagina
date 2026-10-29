@@ -159,3 +159,17 @@ async function eliminarRegistro(registroId) {
   const cuerpo = await res.json().catch(() => ({}));
   return cuerpo.error || 'No se pudo eliminar el registro.';
 }
+
+// Borra archivos de un bucket (la base decide con RLS cuáles puede borrar el usuario).
+async function borrarArchivos(bucket, rutas) {
+  if (!rutas.length) return;
+  await fetch(`${SUPABASE_URL}/storage/v1/object/${bucket}`, {
+    method: 'DELETE',
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${await tokenVigente()}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ prefixes: rutas }),
+  });
+}
