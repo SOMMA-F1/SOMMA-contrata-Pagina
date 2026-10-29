@@ -544,3 +544,8 @@ td.due.warn { color: var(--warn-text); }
 .doc-grupo { display: grid; gap: 0.5rem; padding: 0.7rem 0.8rem 0.8rem; border: 1px solid var(--f1-border); border-radius: 8px; }
 .doc-grupo-titulo { margin: 0; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--f1-stone); }
 .doc-grupo .doc-fila { background: #fff; }
+
+/* Resumen por contrata (administrador) */
+.resumen-contratas { margin-top: 1.5rem; padding: 1.25rem 1.5rem; }
+.resumen-contratas h2 { margin: 0 0 0.2rem; font-size: 1.05rem; }
+.resumen-contratas .muted { margin: 0 0 0.9rem; }

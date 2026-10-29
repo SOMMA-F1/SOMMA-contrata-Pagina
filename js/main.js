@@ -1,5 +1,6 @@
-// Aún no hay fuente de datos conectada: todo arranca vacío.
-// Cuando exista (Supabase u otra), solo hay que llenar estas tres variables.
+// Los trabajadores y su estado de acreditación vienen de Supabase (vista resumen_contratas).
+// La base ya limita lo que se ve: el administrador recibe todas las contratas y cada contrata solo la suya.
+// Vencimientos y avisos aún no tienen fuente de datos y arrancan vacíos.
 const trabajadores = { total: 0, acreditados: 0, noAcreditados: 0, sinAuditar: 0 };
 const vencimientos = []; // { nombre, rut, doc, dias }
 const avisos = [];       // { titulo, texto, fecha }
@@ -186,3 +187,47 @@ pintarCumplimiento();
 pintarDonut();
 pintarVencimientos();
 pintarAvisos();
+
+// ---------- Datos reales desde Supabase ----------
+const sesion = leerSesion();
+const esAdmin = !!sesion && sesion.rol === 'admin';
+
+function pintarResumenContratas(filas) {
+  const body = $('resumen-body');
+  body.replaceChildren();
+  const ordenadas = [...filas].sort((a, b) => b.trabajadores - a.trabajadores || a.nombre.localeCompare(b.nombre, 'es'));
+  ordenadas.forEach((f) => {
+    const tr = document.createElement('tr');
+    const celda = (texto, clase) => { const td = document.createElement('td'); td.textContent = texto; if (clase) td.className = clase; tr.appendChild(td); };
+    celda(f.rol === 'admin' ? `${f.nombre} (administrador)` : f.nombre, 'worker');
+    celda(f.trabajadores);
+    celda(f.acreditados);
+    celda(f.no_acreditados);
+    celda(f.trabajadores ? `${Math.round((f.acreditados / f.trabajadores) * 100)}%` : '—');
+    celda(f.registros_campo);
+    body.appendChild(tr);
+  });
+  $('resumen-contratas').hidden = false;
+}
+
+async function cargarDashboard() {
+  try {
+    const filas = await supabase('resumen_contratas?select=*');
+    trabajadores.total = filas.reduce((s, f) => s + f.trabajadores, 0);
+    trabajadores.acreditados = filas.reduce((s, f) => s + f.acreditados, 0);
+    trabajadores.noAcreditados = filas.reduce((s, f) => s + f.no_acreditados, 0);
+    trabajadores.sinAuditar = 0;
+    pintarCumplimiento();
+    pintarDonut();
+    if (esAdmin) {
+      $('dash-subtitulo').textContent = 'Dashboard de Acreditación · Todas las contratas';
+      pintarResumenContratas(filas);
+    } else if (filas[0]) {
+      $('dash-subtitulo').textContent = `Dashboard de Acreditación · ${filas[0].nombre}`;
+    }
+  } catch {
+    $('nivel-detalle').textContent = 'No se pudieron cargar los datos.';
+  }
+}
+
+cargarDashboard();

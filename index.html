@@ -42,7 +42,7 @@
     <div class="page-head">
       <div>
         <h1>F1 SERVICES &amp; SOLUTIONS</h1>
-        <p>Dashboard de Acreditación</p>
+        <p id="dash-subtitulo">Dashboard de Acreditación</p>
       </div>
       <div class="page-actions">
         <button type="button" class="btn-ghost" id="btn-ayuda">
@@ -119,6 +119,19 @@
         </article>
       </aside>
     </div>
+
+    <section class="card resumen-contratas" id="resumen-contratas" aria-labelledby="resumen-titulo" hidden>
+      <h2 id="resumen-titulo">Resumen por contrata</h2>
+      <p class="muted small">Datos de todas las contratas registradas.</p>
+      <div class="table-wrap">
+        <table class="tabla-listado">
+          <thead>
+            <tr><th>Contrata</th><th>Trabajadores</th><th>Acreditados</th><th>No acreditados</th><th>Cumplimiento</th><th>Docs. de campo</th></tr>
+          </thead>
+          <tbody id="resumen-body"></tbody>
+        </table>
+      </div>
+    </section>
 
     <section class="avisos" id="avisos" aria-labelledby="avisos-title">
       <div class="avisos-head">

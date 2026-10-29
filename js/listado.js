@@ -4,6 +4,11 @@
 const trabajadores = [];
 
 const $ = (id) => document.getElementById(id);
+
+// El administrador ve a los trabajadores de todas las contratas y una columna extra con la contrata.
+const sesionActual = leerSesion();
+const esAdmin = !!sesionActual && sesionActual.rol === 'admin';
+document.querySelector('.col-contrata').hidden = !esAdmin;
 const estado = { orden: { key: 'id', dir: 1 }, pagina: 1 };
 
 function filtrar() {
@@ -13,7 +18,7 @@ function filtrar() {
   const fVenc = $('f-venc').value;
 
   return trabajadores.filter((t) => {
-    if (q && ![t.id, t.nombre, t.rut, t.cargo, t.estado].join(' ').toLowerCase().includes(q)) return false;
+    if (q && ![t.id, t.nombre, t.contrata, t.rut, t.cargo, t.estado].join(' ').toLowerCase().includes(q)) return false;
     if (fEstado && t.estado !== fEstado) return false;
     if (fCargo && !String(t.cargo).toLowerCase().includes(fCargo)) return false;
     if (fVenc === 'none' && t.venc) return false;
@@ -163,7 +168,7 @@ function pintar() {
     const tr = document.createElement('tr');
     tr.className = 'empty-row';
     const td = document.createElement('td');
-    td.colSpan = 7;
+    td.colSpan = esAdmin ? 8 : 7;
     td.textContent = trabajadores.length === 0
       ? 'Sin datos para mostrar.'
       : 'Ningún registro coincide con la búsqueda.';
@@ -204,6 +209,7 @@ function pintar() {
     });
     tdNombre.appendChild(btnNombre);
     tr.appendChild(tdNombre);
+    if (esAdmin) celda(tr, t.contrata || '-');
 
     celda(tr, t.rut);
     celda(tr, t.cargo);
@@ -275,7 +281,7 @@ pintar();
 
 async function cargarTrabajadores() {
   try {
-    const filas = await supabase('trabajadores?select=*&order=id.asc');
+    const filas = await supabase('trabajadores?select=*,perfiles(nombre)&order=id.asc');
     trabajadores.push(...filas.map((f) => ({
       id: f.id,
       nombre: `${f.apellido_paterno} ${f.apellido_materno}, ${f.nombres}`,
@@ -284,6 +290,7 @@ async function cargarTrabajadores() {
       venc: null,
       dias: null,
       estado: f.estado,
+      contrata: f.perfiles ? f.perfiles.nombre : '',
       fila: f,
     })));
     pintar();
@@ -295,9 +302,6 @@ async function cargarTrabajadores() {
 cargarTrabajadores();
 
 // ---------- Editar, estado de acreditación y eliminar ----------
-const sesionActual = leerSesion();
-const esAdmin = !!sesionActual && sesionActual.rol === 'admin';
-
 function nombreCompleto(f) {
   return `${f.apellido_paterno} ${f.apellido_materno}, ${f.nombres}`;
 }
@@ -311,13 +315,18 @@ function aTrabajador(f) {
     venc: null,
     dias: null,
     estado: f.estado,
+    contrata: f.perfiles ? f.perfiles.nombre : '',
     fila: f,
   };
 }
 
 function reemplazarTrabajador(f) {
   const i = trabajadores.findIndex((t) => t.id === f.id);
-  if (i >= 0) trabajadores[i] = aTrabajador(f);
+  if (i >= 0) {
+    const nuevo = aTrabajador(f);
+    nuevo.contrata = trabajadores[i].contrata; // la respuesta de la edición no trae el nombre de la contrata
+    trabajadores[i] = nuevo;
+  }
   pintar();
 }
 
