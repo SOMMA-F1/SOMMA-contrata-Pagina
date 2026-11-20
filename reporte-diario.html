@@ -75,6 +75,107 @@
             <input type="text" id="responsable" name="responsable" autocomplete="name" required>
             <p class="field-error" role="alert"></p>
           </div>
+          <div class="field span-2">
+            <label for="proyecto">Proyecto <span class="req" aria-hidden="true">*</span></label>
+            <input type="text" id="proyecto" name="proyecto" list="lista-proyectos" autocomplete="off" required>
+            <datalist id="lista-proyectos"></datalist>
+            <p class="field-error" role="alert"></p>
+          </div>
+          <div class="field span-2">
+            <label for="actividad">Actividad <span class="req" aria-hidden="true">*</span></label>
+            <input type="text" id="actividad" name="actividad" list="lista-actividades" autocomplete="off" required>
+            <datalist id="lista-actividades"></datalist>
+            <p class="field-error" role="alert"></p>
+          </div>
+          <div class="field">
+            <label for="fecha">Fecha actividad <span class="req" aria-hidden="true">*</span></label>
+            <input type="date" id="fecha" name="fecha" required>
+            <p class="field-error" role="alert"></p>
+          </div>
+          <div class="field">
+            <label for="hora-ingreso">Hora ingreso <span class="req" aria-hidden="true">*</span></label>
+            <input type="time" id="hora-ingreso" name="horaIngreso" required>
+            <p class="field-error" role="alert"></p>
+          </div>
+          <div class="field">
+            <label for="hora-salida">Hora salida <span class="req" aria-hidden="true">*</span></label>
+            <input type="time" id="hora-salida" name="horaSalida" required>
+            <p class="field-error" role="alert"></p>
+          </div>
+          <div class="field span-4">
+            <span class="label" id="lbl-tecnicos">Cantidad de técnicos <span class="req" aria-hidden="true">*</span></span>
+            <div class="seg" id="seg-tecnicos" role="radiogroup" aria-labelledby="lbl-tecnicos" data-nombre="tecnicos" data-opciones="1,2,3,4"></div>
+            <p class="field-error" role="alert"></p>
+          </div>
+        </div>
+      </section>
+
+      <section class="form-section" aria-labelledby="sec-sst">
+        <h2 id="sec-sst">Documentos de gestión de SST</h2>
+        <div class="form-grid">
+          <div class="field span-4">
+            <label for="tipo-riesgo">Elige qué tipo de trabajo de alto riesgo realizaste <span class="req" aria-hidden="true">*</span></label>
+            <select id="tipo-riesgo" name="tipoRiesgo" required></select>
+            <p class="field-error" role="alert"></p>
+          </div>
+          <div class="field span-4 subida" data-archivo="sctr"></div>
+          <div class="field span-4 subida" data-archivo="iperc"></div>
+        </div>
+      </section>
+
+      <section class="form-section" aria-labelledby="sec-accidentes">
+        <h2 id="sec-accidentes">Registro de accidente de trabajo</h2>
+        <div class="form-grid">
+          <div class="field span-4">
+            <span class="label" id="lbl-incidentes">Registro de incidentes o accidentes laborales diarios <span class="req" aria-hidden="true">*</span></span>
+            <div class="seg" role="radiogroup" aria-labelledby="lbl-incidentes" data-nombre="incidentes" data-opciones="Sí,No"></div>
+            <p class="field-error" role="alert"></p>
+          </div>
+          <div class="field span-4">
+            <span class="label" id="lbl-choques">¿Se reportan choques vehiculares? <span class="req" aria-hidden="true">*</span></span>
+            <div class="seg" role="radiogroup" aria-labelledby="lbl-choques" data-nombre="choques" data-opciones="Sí,No"></div>
+            <p class="field-error" role="alert"></p>
+          </div>
+        </div>
+      </section>
+
+      <section class="form-section" aria-labelledby="sec-epidemio">
+        <h2 id="sec-epidemio">Información epidemiológica</h2>
+        <div class="form-grid">
+          <div class="field span-4 subida" data-archivo="desinfeccion"></div>
+          <div class="field span-4 subida" data-archivo="vehiculo"></div>
+          <div class="field span-4 subida" data-archivo="herramientas"></div>
+          <div class="field span-4 subida" data-archivo="declaracion"></div>
+          <div class="field span-4 subida" data-archivo="extintor"></div>
+        </div>
+      </section>
+
+      <section class="form-section" aria-labelledby="sec-riesgos">
+        <h2 id="sec-riesgos">Trabajos de riesgo y medio ambiente</h2>
+        <div class="form-grid">
+          <div class="field span-4 subida" data-archivo="delimitacion"></div>
+          <div class="field span-4 subida" data-archivo="contingencia"></div>
+          <div class="field span-4">
+            <span class="label" id="lbl-escalera">¿Utilizas escalera portátil en esta actividad?</span>
+            <div class="seg" role="radiogroup" aria-labelledby="lbl-escalera" data-nombre="escalera" data-opciones="Sí,No"></div>
+            <p class="field-error" role="alert"></p>
+          </div>
+
+          <p class="aviso-riesgo span-4">Acciones recomendadas para prevenir el peligro y mitigar los riesgos asociados de TRABAJOS EN ALTURA. Los trabajos en altura superiores a los 1.80 metros en solitario están prohibidos, se debe contar con un vigía o acompañante.</p>
+          <div class="field span-4">
+            <span class="label" id="lbl-altura">¿Realizaste trabajos en altura? <span class="req" aria-hidden="true">*</span></span>
+            <div class="seg" role="radiogroup" aria-labelledby="lbl-altura" data-nombre="altura" data-opciones="Sí,No"></div>
+            <p class="field-error" role="alert"></p>
+          </div>
+
+          <p class="aviso-riesgo span-4">Acciones recomendadas para prevenir el peligro y mitigar los riesgos asociados de TRABAJOS DE RIESGO ELÉCTRICO. Trabajos con alta tensión están prohibidos; en trabajos con energía se debe contar con un vigía o acompañante.</p>
+          <div class="field span-4">
+            <span class="label" id="lbl-electrico">¿Realizaste trabajos de riesgo eléctrico? <span class="req" aria-hidden="true">*</span></span>
+            <div class="seg" role="radiogroup" aria-labelledby="lbl-electrico" data-nombre="electrico" data-opciones="Sí,No"></div>
+            <p class="field-error" role="alert"></p>
+          </div>
+
+          <div class="field span-4 subida" data-archivo="residuos"></div>
         </div>
       </section>
 
@@ -97,11 +198,14 @@
         <table class="tabla-listado">
           <thead>
             <tr>
-              <th>Fecha y hora</th>
+              <th>Fecha</th>
               <th>Ticket</th>
               <th class="col-contrata" hidden>Contratista</th>
               <th>Site</th>
-              <th>Responsable</th>
+              <th>Proyecto</th>
+              <th>Actividad</th>
+              <th>Técnicos</th>
+              <th>Archivos</th>
             </tr>
           </thead>
           <tbody id="reportes-body"></tbody>
@@ -109,6 +213,15 @@
       </div>
     </section>
   </main>
+
+  <dialog class="modal" id="dlg-reporte" aria-labelledby="reporte-titulo-modal">
+    <h2 id="reporte-titulo-modal"></h2>
+    <p class="muted small campo-docs-sub" id="reporte-sub-modal"></p>
+    <div class="docs-lista" id="reporte-lista"></div>
+    <div class="form-actions">
+      <button type="button" class="btn-primary" id="reporte-cerrar">Cerrar</button>
+    </div>
+  </dialog>
 
   <footer class="footer">
     <p>&copy; <span id="year"></span> F1+ Services &amp; Solutions · SOMMA</p>
