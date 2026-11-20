@@ -22,3 +22,8 @@ create policy "insertar reportes propios" on public.reportes_diarios
 create policy "leer reportes propios o admin" on public.reportes_diarios
   for select to authenticated
   using (contrata_id = (select auth.uid()) or privado.es_admin());
+
+-- Permisos mínimos: solo leer e insertar (las políticas RLS filtran qué filas).
+revoke all on public.reportes_diarios from anon;
+revoke all on public.reportes_diarios from authenticated;
+grant select, insert on public.reportes_diarios to authenticated;
